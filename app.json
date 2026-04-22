@@ -40,6 +40,13 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow CampusTradeApp to access your photos to upload listing images.",
+          "cameraPermission": "Allow CampusTradeApp to use your camera to take listing photos."
+        }
       ]
     ],
     "experiments": {

@@ -8,9 +8,10 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    updateProfile as firebaseUpdateProfile
+    updateProfile as firebaseUpdateProfile,
+    deleteUser
 } from 'firebase/auth';
-import { collection, where, onSnapshot, query } from 'firebase/firestore';
+import { collection, where, onSnapshot, query, getDocs, deleteDoc } from 'firebase/firestore';
 import { registerForPushNotificationsAsync, sendLocalNotification, savePushToken } from '@/src/utils/notifications';
 import { useRef } from 'react';
 import Constants from 'expo-constants';
@@ -31,7 +32,6 @@ export type User = {
     avatar: string;
     phone: string;
     isVerified: boolean;
-    rating: number;
     totalSales: number;
     memberSince: string;
     savedItems?: string[];
@@ -54,7 +54,6 @@ const DEFAULT_USER: User = {
     avatar: 'https://ui-avatars.com/api/?name=Alex+Student&background=6366f1&color=fff&size=300',
     phone: '+1 (555) 234-5678',
     isVerified: true,
-    rating: 4.8,
     totalSales: 12,
     memberSince: 'Sep 2023',
     savedItems: [],
@@ -73,6 +72,7 @@ interface AuthContextType {
     logout: () => Promise<void>;
     updateUser: (updates: Partial<User>) => Promise<void>;
     toggleSavedItem: (itemId: string) => Promise<void>;
+    deleteAccount: () => Promise<{ success: boolean; error?: string }>;
     totalUnreadCount: number;
     unreadNotifsCount: number;
 }
@@ -98,6 +98,7 @@ const AuthContext = createContext<AuthContextType>({
     logout: async () => { },
     updateUser: async () => { },
     toggleSavedItem: async () => { },
+    deleteAccount: async () => ({ success: false }),
     totalUnreadCount: 0,
     unreadNotifsCount: 0,
 });
@@ -209,8 +210,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // 2. Listen for General Unread Notifications
         const qNotifs = query(
             collection(db, 'notifications'),
-            where('recipientId', '==', user.id),
-            where('read', '==', false)
+            where('toUserId', '==', user.id),
+            where('isRead', '==', false)
         );
 
         const unsubscribeNotifs = onSnapshot(qNotifs, (snapshot) => {
@@ -358,10 +359,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await updateUser({ savedItems: newSavedItems });
     };
 
+    const deleteAccount = async () => {
+        if (!user || !auth.currentUser) return { success: false, error: 'No authenticated user found.' };
+
+        try {
+            const userId = user.id;
+            const firebaseUser = auth.currentUser;
+
+            // 1. Delete user's listings
+            const listingsQuery = query(collection(db, 'listings'), where('sellerId', '==', userId));
+            const listingsSnap = await getDocs(listingsQuery);
+            const deleteListingsPromises = listingsSnap.docs.map(doc => deleteDoc(doc.ref));
+            await Promise.all(deleteListingsPromises);
+
+            // 2. Delete user's profile document
+            await deleteDoc(doc(db, 'users', userId));
+
+            // 3. Delete user's notifications
+            const notifsQuery = query(collection(db, 'notifications'), where('recipientId', '==', userId));
+            const notifsSnap = await getDocs(notifsQuery);
+            const deleteNotifsPromises = notifsSnap.docs.map(doc => deleteDoc(doc.ref));
+            await Promise.all(deleteNotifsPromises);
+
+            // 4. Delete user's auth account
+            await deleteUser(firebaseUser);
+
+            // 5. Cleanup local state
+            await AsyncStorage.removeItem(AUTH_USER_KEY);
+            setUser(null);
+
+            return { success: true };
+        } catch (error: any) {
+            console.error("Delete account error:", error);
+            // If it's a "requires-recent-login" error, we should probably inform the user
+            if (error.code === 'auth/requires-recent-login') {
+                return { success: false, error: 'Please log out and log back in before deleting your account for security.' };
+            }
+            return { success: false, error: error.message || 'Failed to delete account.' };
+        }
+    };
+
     return (
         <AuthContext.Provider value={{ 
             user, isLoggedIn: !!user, isLoading, login, signup, logout, updateUser, 
-            toggleSavedItem, totalUnreadCount, unreadNotifsCount 
+            toggleSavedItem, deleteAccount, totalUnreadCount, unreadNotifsCount 
         }}>
             {children}
         </AuthContext.Provider>

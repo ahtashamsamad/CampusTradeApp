@@ -103,13 +103,7 @@ export default function SavedScreen() {
             </View>
 
             <ScrollView style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }} contentContainerStyle={{ paddingBottom: 100 }}>
-                {/* Filter Tabs (Mock) */}
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 24 }}>
-                    <FilterTab title="All Items" isActive={true} colors={colors} />
-                    <FilterTab title="Books" isActive={false} colors={colors} />
-                    <FilterTab title="Electronics" isActive={false} colors={colors} />
-                    <FilterTab title="Furniture" isActive={false} colors={colors} />
-                </ScrollView>
+
 
                 {loading ? (
                     <View style={{ paddingVertical: 100, alignItems: 'center' }}>
@@ -151,17 +145,7 @@ export default function SavedScreen() {
     );
 }
 
-function FilterTab({ title, isActive, colors }: any) {
-    return (
-        <TouchableOpacity style={{
-            paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginRight: 10,
-            backgroundColor: isActive ? colors.primary : colors.surface,
-            borderWidth: 1, borderColor: isActive ? colors.primary : colors.border,
-        }}>
-            <Text style={{ fontSize: 13, fontWeight: '600', color: isActive ? '#fff' : colors.textSecondary }}>{title}</Text>
-        </TouchableOpacity>
-    );
-}
+
 
 function WishlistItem({ title, price, status, image, onPress, onRemove, colors }: any) {
     const isSold = status === 'Sold' || status === 'sold';

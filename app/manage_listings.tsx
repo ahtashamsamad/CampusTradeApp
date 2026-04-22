@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -18,17 +18,17 @@ export default function ManageListingsScreen() {
     const [listings, setListings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeFilter, setActiveFilter] = useState('Active');
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         fetchListings();
-    }, [user, activeFilter]);
+    }, [user, activeFilter, searchQuery]);
 
     const fetchListings = async () => {
         if (!user) return;
         try {
             setLoading(true);
             
-            // Fetch all listings for this user regardless of status field existence
             const q = query(
                 collection(db, 'listings'),
                 where('userId', '==', user.id)
@@ -40,11 +40,14 @@ export default function ManageListingsScreen() {
                 ...doc.data() as any
             }));
 
-            // Filter client-side so we can default missing status to 'active'
+            // Filter client-side
             const currentStatus = activeFilter.toLowerCase();
             const filtered = allFetched.filter((item: any) => {
                 const itemStatus = (item.status || 'active').toLowerCase();
-                return itemStatus === currentStatus;
+                const matchesStatus = itemStatus === currentStatus;
+                const matchesSearch = !searchQuery || 
+                    item.title?.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesStatus && matchesSearch;
             });
 
             // Sort them client-side by createdAt descending
@@ -75,13 +78,36 @@ export default function ManageListingsScreen() {
                     </TouchableOpacity>
                     <Text className="text-2xl font-bold tracking-tight text-white flex-1">My Listings</Text>
                 </View>
-                <TouchableOpacity className="flex items-center justify-center w-10 h-10 rounded-full bg-primary shadow-lg shadow-primary/30">
+                <TouchableOpacity 
+                    onPress={() => router.push('/(tabs)/create' as any)}
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-primary shadow-lg shadow-primary/30"
+                >
                     <MaterialIcons name="add" size={24} color="white" />
                 </TouchableOpacity>
             </View>
 
-            {/* Filter Tabs */}
-            <View className="px-4 py-3 bg-background-dark/95 z-10">
+            {/* Search and Filter Tabs */}
+            <View className="px-4 py-3 bg-background-dark/95 z-10 gap-3">
+                <View style={{
+                    flexDirection: 'row', alignItems: 'center',
+                    backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.border,
+                    borderRadius: 12, paddingHorizontal: 12, paddingVertical: Platform.OS === 'ios' ? 10 : 0
+                }}>
+                    <MaterialIcons name="search" size={20} color={colors.textSecondary} />
+                    <TextInput
+                        placeholder="Search my listings..."
+                        placeholderTextColor={colors.textMuted}
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        style={{ flex: 1, marginLeft: 8, fontSize: 14, color: colors.textPrimary }}
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchQuery('')}>
+                            <MaterialIcons name="close" size={18} color={colors.textSecondary} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+
                 <View className="flex-row p-1 bg-surface-dark rounded-lg border border-surface-highlight">
                     <FilterTab title="Active" isActive={activeFilter === 'Active'} onPress={() => setActiveFilter('Active')} />
                     <FilterTab title="Pending" isActive={activeFilter === 'Pending'} onPress={() => setActiveFilter('Pending')} />
@@ -220,7 +246,10 @@ function ListingItem({ id, title, price, time, views, image, onDelete, status }:
 
             {/* Action Bar */}
             <View className="flex-row border-t border-surface-highlight">
-                <TouchableOpacity className="flex-1 py-3 border-r border-surface-highlight flex-row items-center justify-center gap-1.5 bg-background-dark/30">
+                <TouchableOpacity 
+                    onPress={() => router.push(`/edit_listing/${id}`)}
+                    className="flex-1 py-3 border-r border-surface-highlight flex-row items-center justify-center gap-1.5 bg-background-dark/30"
+                >
                     <MaterialIcons name="edit" size={16} color="#94a3b8" />
                     <Text className="text-xs font-medium text-text-secondary">Edit</Text>
                 </TouchableOpacity>

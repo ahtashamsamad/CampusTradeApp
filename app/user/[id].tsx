@@ -12,7 +12,7 @@ export default function UserProfileScreen() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
     const { user: currentUser } = useAuth();
-    const [activeTab, setActiveTab] = useState('listings');
+
     const [user, setUser] = useState<any>(null);
     const [listings, setListings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -99,16 +99,10 @@ export default function UserProfileScreen() {
                     </Text>
 
                     <View className="flex-row items-center gap-6 mb-6">
-                        <TouchableOpacity 
-                            className="items-center" 
-                            onPress={() => router.push({ pathname: '/seller_reviews', params: { sellerId: id } } as any)}
-                        >
-                            <View className="flex-row items-center">
-                                <Text className="text-lg font-bold text-white">{(user?.rating || 0).toFixed(1)}</Text>
-                                <MaterialIcons name="star" size={16} color="#facc15" className="ml-0.5" />
-                            </View>
-                            <Text className="text-xs text-text-secondary">{user?.reviewCount || 0} Reviews</Text>
-                        </TouchableOpacity>
+                        <View className="items-center">
+                            <Text className="text-lg font-bold text-white">{listings.length}</Text>
+                            <Text className="text-xs text-text-secondary">Listings</Text>
+                        </View>
 
                         <View className="w-px h-8 bg-surface-highlight" />
 
@@ -132,55 +126,45 @@ export default function UserProfileScreen() {
                 {/* Tabs */}
                 <View className="flex-row border-b border-surface-highlight px-4">
                     <TouchableOpacity
-                        className={`flex-1 py-4 border-b-2 items-center ${activeTab === 'listings' ? 'border-primary' : 'border-transparent'}`}
-                        onPress={() => setActiveTab('listings')}
+                        className="flex-1 py-4 border-b-2 items-center border-primary"
+                        onPress={() => {}}
                     >
-                        <Text className={`font-semibold ${activeTab === 'listings' ? 'text-primary' : 'text-text-secondary'}`}>
+                        <Text className="font-semibold text-primary">
                             Listings ({listings.length})
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        className={`flex-1 py-4 border-b-2 items-center ${activeTab === 'reviews' ? 'border-primary' : 'border-transparent'}`}
-                        onPress={() => router.push({ pathname: '/seller_reviews', params: { sellerId: id } } as any)}
-                    >
-                        <Text className={`font-semibold ${activeTab === 'reviews' ? 'text-primary' : 'text-text-secondary'}`}>
-                            Reviews ({user?.reviewCount || 0})
                         </Text>
                     </TouchableOpacity>
                 </View>
 
                 {/* Listings Grid */}
-                {activeTab === 'listings' && (
-                    <View className="p-4 flex-row flex-wrap justify-between gap-y-4">
-                        {loading ? (
-                            <View className="w-full py-10 items-center">
-                                <ActivityIndicator color="#6366f1" />
-                            </View>
-                        ) : listings.length === 0 ? (
-                            <View className="w-full py-20 items-center">
-                                <MaterialIcons name="inventory" size={48} color="#475569" />
-                                <Text className="text-text-secondary mt-4">No active listings.</Text>
-                            </View>
-                        ) : (
-                            listings.map(item => (
-                                <TouchableOpacity 
-                                    key={item.id} 
-                                    className="w-[48%] bg-surface-dark rounded-xl border border-surface-highlight overflow-hidden" 
-                                    onPress={() => router.push(`/listing/${item.id}` as any)}
-                                >
-                                    <Image 
-                                        source={{ uri: item.images?.[0] || item.imageUrl || item.image }} 
-                                        className="w-full aspect-square bg-slate-800" 
-                                    />
-                                    <View className="p-3">
-                                        <Text className="text-white font-semibold text-sm mb-1" numberOfLines={2}>{item.title}</Text>
-                                        <Text className="text-primary font-bold">{formatCurrency(item.price)}</Text>
-                                    </View>
-                                </TouchableOpacity>
-                            ))
-                        )}
-                    </View>
-                )}
+                <View className="p-4 flex-row flex-wrap justify-between gap-y-4">
+                    {loading ? (
+                        <View className="w-full py-10 items-center">
+                            <ActivityIndicator color="#6366f1" />
+                        </View>
+                    ) : listings.length === 0 ? (
+                        <View className="w-full py-20 items-center">
+                            <MaterialIcons name="inventory" size={48} color="#475569" />
+                            <Text className="text-text-secondary mt-4">No active listings.</Text>
+                        </View>
+                    ) : (
+                        listings.map(item => (
+                            <TouchableOpacity 
+                                key={item.id} 
+                                className="w-[48%] bg-surface-dark rounded-xl border border-surface-highlight overflow-hidden" 
+                                onPress={() => router.push(`/listing/${item.id}` as any)}
+                            >
+                                <Image 
+                                    source={{ uri: item.images?.[0] || item.imageUrl || item.image }} 
+                                    className="w-full aspect-square bg-slate-800" 
+                                />
+                                <View className="p-3">
+                                    <Text className="text-white font-semibold text-sm mb-1" numberOfLines={2}>{item.title}</Text>
+                                    <Text className="text-primary font-bold">{formatCurrency(item.price)}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        ))
+                    )}
+                </View>
 
             </ScrollView>
         </SafeAreaView>

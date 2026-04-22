@@ -13,6 +13,8 @@ import { collection, query, where, getDocs, orderBy, limit } from 'firebase/fire
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/src/utils/format';
 
+import { CATEGORIES_DATA } from '@/constants/categories';
+
 type Category = {
     id: string;
     name: string;
@@ -24,15 +26,7 @@ type Category = {
 
 const CATEGORIES: Category[] = [
     { id: 'all', name: 'All', icon: 'grid-view', color: '#818cf8', bgColor: '#3730a3' },
-    { id: 'books', name: 'Books', icon: 'menu-book', color: '#93c5fd', bgColor: '#1e3a5f' },
-    { id: 'tech', name: 'Tech', icon: 'devices', color: '#d8b4fe', bgColor: '#4c1d95' },
-    { id: 'lab', name: 'Lab Gear', icon: 'science', color: '#5eead4', bgColor: '#0f3d38' },
-    { id: 'furniture', name: 'Furniture', icon: 'chair', color: '#fdba74', bgColor: '#431407' },
-    { id: 'clothing', name: 'Clothing', icon: 'checkroom', color: '#f9a8d4', bgColor: '#500724' },
-    { id: 'sports', name: 'Sports', icon: 'sports-soccer', color: '#86efac', bgColor: '#052e16' },
-    { id: 'notes', name: 'Notes', icon: 'description', color: '#fde68a', bgColor: '#451a03' },
-    { id: 'transport', name: 'Transport', icon: 'directions-bike', color: '#67e8f9', bgColor: '#083344' },
-    { id: 'services', name: 'Services', icon: 'handyman', color: '#fca5a5', bgColor: '#450a0a' },
+    ...CATEGORIES_DATA
 ];
 
 const SORT_OPTIONS = ['Newest', 'Price: Low–High', 'Price: High–Low', 'Most Relevant'];
@@ -47,54 +41,137 @@ export default function CategoriesScreen() {
     const [sortBy, setSortBy] = useState('Newest');
     const [showSort, setShowSort] = useState(false);
     const [searchQuery, setSearchQuery] = useState(params.search || '');
+    
+    // Filter states
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+    const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
+    const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+    
+    // Temporary states for modal
+    const [tempMinPrice, setTempMinPrice] = useState('');
+    const [tempMaxPrice, setTempMaxPrice] = useState('');
+    const [tempConditions, setTempConditions] = useState<string[]>([]);
+
     const [listings, setListings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchListings();
-    }, [selectedCategory]);
+    }, []); // Fetch once on mount
 
     const fetchListings = async () => {
         try {
             setLoading(true);
+            console.log("[CATEGORIES] Fetching all listings from Firestore...");
             const listingsRef = collection(db, 'listings');
-            let q;
-
-            if (selectedCategory === 'all') {
-                q = query(listingsRef, orderBy('createdAt', 'desc'), limit(50));
-            } else {
-                // Find matching category ID or normalization
-                const currentCat = CATEGORIES.find(c => c.id === selectedCategory);
-                q = query(
-                    listingsRef, 
-                    where('category', '==', currentCat?.name || selectedCategory), 
-                    orderBy('createdAt', 'desc'),
-                    limit(50)
-                );
-            }
+            
+            // Simple query to avoid any index issues
+            const q = query(listingsRef, limit(100));
 
             const querySnapshot = await getDocs(q);
-            const data = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            console.log(`[CATEGORIES] Firestore returned ${querySnapshot.docs.length} documents`);
+            
+            const data = querySnapshot.docs.map(doc => {
+                const docData = doc.data();
+                return {
+                    id: doc.id,
+                    ...docData
+                };
+            });
+
+            if (data.length > 0) {
+                console.log("[CATEGORIES] First item category:", data[0].category);
+                console.log("[CATEGORIES] First item title:", data[0].title);
+            } else {
+                console.warn("[CATEGORIES] NO DATA FOUND IN 'listings' COLLECTION!");
+            }
+            
             setListings(data);
         } catch (error) {
-            console.error("Error fetching category listings:", error);
+            console.error("[CATEGORIES] Error fetching listings:", error);
             setListings([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const filteredListings = listings.filter(item =>
-        item.title?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Client-side refinement for category, search, price range, and condition
+    const filteredListings = listings.filter(item => {
+        // 1. Category Filter (Case-insensitive + Trim)
+        const itemCategory = (item.category || '').toString().toLowerCase().trim();
+        const selectedCatId = (selectedCategory || 'all').toString().toLowerCase().trim();
+        
+        // Handle "all" case
+        const isAll = selectedCatId === 'all';
+        
+        // Find the category name corresponding to the selected ID
+        const categoryObj = CATEGORIES.find(c => c.id.toLowerCase() === selectedCatId);
+        const targetCategoryName = categoryObj?.name.toLowerCase().trim() || selectedCatId;
+
+        // Strict matching: item.category should match the name of the selected category
+        const matchesCategory = isAll || itemCategory === targetCategoryName;
+
+        // 2. Search Filter
+        const search = (searchQuery || '').toLowerCase().trim();
+        const matchesSearch = !search || 
+            (item.title || '').toLowerCase().includes(search) ||
+            (item.description || '').toLowerCase().includes(search);
+        
+        // 3. Price Filter
+        const itemPrice = typeof item.price === 'string' ? parseFloat(item.price) : (item.price || 0);
+        const min = minPrice ? parseFloat(minPrice) : -Infinity;
+        const max = maxPrice ? parseFloat(maxPrice) : Infinity;
+        const matchesPrice = (isNaN(itemPrice) || (itemPrice >= min && itemPrice <= max));
+
+        // 4. Condition Filter
+        const matchesCondition = selectedConditions.length === 0 || 
+            (item.condition && selectedConditions.some(c => c.toLowerCase().trim() === item.condition.toString().toLowerCase().trim()));
+
+        return matchesCategory && matchesSearch && matchesPrice && matchesCondition;
+    });
+
+    console.log(`[FILTER] Total: ${listings.length}, Filtered: ${filteredListings.length}, Cat: ${selectedCategory}, Search: "${searchQuery}"`);
+
+    const resetFilters = () => {
+        console.log("[CATEGORIES] Resetting all filters");
+        setSearchQuery('');
+        setMinPrice('');
+        setMaxPrice('');
+        setSelectedConditions([]);
+        setTempMinPrice('');
+        setTempMaxPrice('');
+        setTempConditions([]);
+        setSelectedCategory('all');
+        setSortBy('Newest');
+    };
+
+    const applyFilters = () => {
+        setMinPrice(tempMinPrice);
+        setMaxPrice(tempMaxPrice);
+        setSelectedConditions(tempConditions);
+        setIsFilterModalVisible(false);
+    };
+
+    const toggleCondition = (cond: string) => {
+        if (tempConditions.includes(cond)) {
+            setTempConditions(tempConditions.filter(c => c !== cond));
+        } else {
+            setTempConditions([...tempConditions, cond]);
+        }
+    };
 
     const sortedListings = [...filteredListings].sort((a, b) => {
-        if (sortBy === 'Price: Low–High') return a.price - b.price;
-        if (sortBy === 'Price: High–Low') return b.price - a.price;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        const priceA = typeof a.price === 'string' ? parseFloat(a.price) : (a.price || 0);
+        const priceB = typeof b.price === 'string' ? parseFloat(b.price) : (b.price || 0);
+
+        if (sortBy === 'Price: Low–High') return priceA - priceB;
+        if (sortBy === 'Price: High–Low') return priceB - priceA;
+        
+        // Default: Newest
+        const dateA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt || 0).getTime();
+        const dateB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt || 0).getTime();
+        return dateB - dateA;
     });
 
     return (
@@ -221,33 +298,58 @@ export default function CategoriesScreen() {
                 marginTop: 2,
             }}>
                 <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textMuted }}>
-                    {sortedListings.length} ITEMS FOUND
+                    {filteredListings.length} ITEMS FOUND
                 </Text>
 
-                <View style={{ position: 'relative' }}>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
                     <TouchableOpacity
-                        onPress={() => setShowSort(!showSort)}
+                        onPress={() => {
+                            setTempMinPrice(minPrice);
+                            setTempMaxPrice(maxPrice);
+                            setTempConditions(selectedConditions);
+                            setIsFilterModalVisible(true);
+                        }}
                         activeOpacity={0.7}
                         style={{
                             flexDirection: 'row',
                             alignItems: 'center',
                             gap: 6,
-                            backgroundColor: colors.surface,
+                            backgroundColor: (minPrice || maxPrice || selectedConditions.length > 0) ? colors.primary + '20' : colors.surface,
                             borderWidth: 1,
-                            borderColor: colors.border,
+                            borderColor: (minPrice || maxPrice || selectedConditions.length > 0) ? colors.primary : colors.border,
                             borderRadius: 8,
                             paddingHorizontal: 12,
                             paddingVertical: 8,
                         }}
                     >
-                        <MaterialIcons name="sort" size={16} color={colors.textSecondary} />
-                        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textSecondary }}>{sortBy}</Text>
-                        <MaterialIcons
-                            name={showSort ? 'expand-less' : 'expand-more'}
-                            size={18}
-                            color={colors.textSecondary}
-                        />
+                        <MaterialIcons name="tune" size={16} color={(minPrice || maxPrice || selectedConditions.length > 0) ? colors.primary : colors.textSecondary} />
+                        <Text style={{ fontSize: 13, fontWeight: '600', color: (minPrice || maxPrice || selectedConditions.length > 0) ? colors.primary : colors.textSecondary }}>Filter</Text>
                     </TouchableOpacity>
+
+                    <View style={{ position: 'relative' }}>
+                        <TouchableOpacity
+                            onPress={() => setShowSort(!showSort)}
+                            activeOpacity={0.7}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                                backgroundColor: colors.surface,
+                                borderWidth: 1,
+                                borderColor: colors.border,
+                                borderRadius: 8,
+                                paddingHorizontal: 12,
+                                paddingVertical: 8,
+                            }}
+                        >
+                            <MaterialIcons name="sort" size={16} color={colors.textSecondary} />
+                            <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textSecondary }}>{sortBy}</Text>
+                            <MaterialIcons
+                                name={showSort ? 'expand-less' : 'expand-more'}
+                                size={18}
+                                color={colors.textSecondary}
+                            />
+                        </TouchableOpacity>
 
                     {showSort && (
                         <View style={{
@@ -283,6 +385,104 @@ export default function CategoriesScreen() {
                     )}
                 </View>
             </View>
+        </View>
+
+            {/* Filter Modal */}
+            {isFilterModalVisible && (
+                <View style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1000,
+                    justifyContent: 'flex-end'
+                }}>
+                    <TouchableOpacity 
+                        style={{ flex: 1 }} 
+                        onPress={() => setIsFilterModalVisible(false)} 
+                    />
+                    <View style={{
+                        backgroundColor: colors.surface,
+                        borderTopLeftRadius: 24, borderTopRightRadius: 24,
+                        padding: 24, paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+                        maxHeight: '80%'
+                    }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                            <Text style={{ fontSize: 20, fontWeight: '800', color: colors.textPrimary }}>Filters</Text>
+                            <TouchableOpacity onPress={() => setIsFilterModalVisible(false)}>
+                                <MaterialIcons name="close" size={24} color={colors.textSecondary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            {/* Price Range */}
+                            <View style={{ marginBottom: 24 }}>
+                                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 }}>Price Range (Rs)</Text>
+                                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                                    <TextInput
+                                        style={{ flex: 1, backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, color: colors.textPrimary }}
+                                        placeholder="Min"
+                                        placeholderTextColor={colors.textMuted}
+                                        keyboardType="numeric"
+                                        value={tempMinPrice}
+                                        onChangeText={setTempMinPrice}
+                                    />
+                                    <View style={{ width: 10, height: 1, backgroundColor: colors.border }} />
+                                    <TextInput
+                                        style={{ flex: 1, backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, color: colors.textPrimary }}
+                                        placeholder="Max"
+                                        placeholderTextColor={colors.textMuted}
+                                        keyboardType="numeric"
+                                        value={tempMaxPrice}
+                                        onChangeText={setTempMaxPrice}
+                                    />
+                                </View>
+                            </View>
+
+                            {/* Condition */}
+                            <View style={{ marginBottom: 24 }}>
+                                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 }}>Condition</Text>
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                                    {['New', 'Like New', 'Good', 'Fair', 'Poor'].map(cond => {
+                                        const isSelected = tempConditions.includes(cond);
+                                        return (
+                                            <TouchableOpacity
+                                                key={cond}
+                                                onPress={() => toggleCondition(cond)}
+                                                style={{
+                                                    paddingHorizontal: 14, paddingVertical: 8,
+                                                    borderRadius: 10, borderWidth: 1,
+                                                    borderColor: isSelected ? colors.primary : colors.border,
+                                                    backgroundColor: isSelected ? colors.primary + '20' : colors.surface,
+                                                }}
+                                            >
+                                                <Text style={{ fontSize: 13, fontWeight: '600', color: isSelected ? colors.primary : colors.textSecondary }}>{cond}</Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            </View>
+                        </ScrollView>
+
+                        {/* Footer Buttons */}
+                        <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setTempMinPrice('');
+                                    setTempMaxPrice('');
+                                    setTempConditions([]);
+                                }}
+                                style={{ flex: 1, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textSecondary }}>Clear All</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={applyFilters}
+                                style={{ flex: 2, backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                <Text style={{ fontSize: 15, fontWeight: '700', color: 'white' }}>Apply Filters</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            )}
 
             {/* Listings Grid */}
             {loading ? (
@@ -299,14 +499,21 @@ export default function CategoriesScreen() {
                         <MaterialIcons name="search-off" size={40} color={colors.textMuted} />
                     </View>
                     <Text style={{ fontSize: 18, fontWeight: '800', color: colors.textPrimary, textAlign: 'center' }}>
-                        No matches found
+                        No listings found
                     </Text>
                     <Text style={{ fontSize: 15, color: colors.textSecondary, textAlign: 'center', lineHeight: 22 }}>
-                        We couldn't find anything matching your current filters or search term.
+                        No listings found for the selected filters.
                     </Text>
+                    <TouchableOpacity 
+                        onPress={resetFilters}
+                        style={{ marginTop: 8, backgroundColor: colors.primary + '20', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 }}
+                    >
+                        <Text style={{ color: colors.primary, fontWeight: '700' }}>Clear All Filters</Text>
+                    </TouchableOpacity>
                 </View>
             ) : (
                 <FlatList
+                    key={selectedCategory}
                     data={sortedListings}
                     keyExtractor={item => item.id?.toString()}
                     numColumns={2}
@@ -380,7 +587,7 @@ export default function CategoriesScreen() {
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                     <MaterialIcons name="local-offer" size={12} color={colors.textMuted} />
                                     <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textSecondary }} numberOfLines={1}>
-                                        {CATEGORIES.find(c => c.id === item.category)?.name || 'Misc'}
+                                        {CATEGORIES.find(c => c.id === item.category || c.name === item.category)?.name || item.category || 'Misc'}
                                     </Text>
                                 </View>
                             </View>

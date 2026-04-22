@@ -11,16 +11,19 @@ import { useAuth } from '@/context/AuthContext';
 
 import { API_BASE_URL } from '@/constants/Config';
 import { db } from '@/src/config/firebase';
-import { collection, query, orderBy, limit, getDocs, onSnapshot, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, onSnapshot } from 'firebase/firestore';
 import { formatCurrency } from '@/src/utils/format';
+import { CATEGORIES_DATA } from '@/constants/categories';
 
-const CATEGORIES = [
-  { icon: 'menu-book', title: 'Books', id: 'books', color: '#93c5fd', bg: '#1e3a5f' },
-  { icon: 'devices', title: 'Tech', id: 'tech', color: '#d8b4fe', bg: '#4c1d95' },
-  { icon: 'science', title: 'Lab Gear', id: 'lab', color: '#5eead4', bg: '#0f3d38' },
-  { icon: 'chair', title: 'Furniture', id: 'furniture', color: '#fdba74', bg: '#431407' },
-  { icon: 'grid-view', title: 'More', id: 'all', color: '#94a3b8', bg: '#1e293b' },
-];
+const CATEGORIES = CATEGORIES_DATA.slice(0, 4).map(c => ({
+  icon: c.icon,
+  title: c.name,
+  id: c.id,
+  color: c.color,
+  bg: c.bgColor
+})).concat([
+  { icon: 'grid-view', title: 'More', id: 'all', color: '#94a3b8', bg: '#1e293b' }
+]);
 
 export default function MarketplaceHome() {
   const router = useRouter();
@@ -69,9 +72,7 @@ export default function MarketplaceHome() {
   const fetchLatestListings = async () => {
     try {
       setLoading(true);
-
-      // Fetch once from Firestore (optimized for Spark/Free tier)
-      const q = query(collection(db, 'listings'), orderBy('createdAt', 'desc'), limit(10));
+      const q = query(collection(db, 'listings'), orderBy('createdAt', 'desc'), limit(15));
       const querySnapshot = await getDocs(q);
 
       const firestoreListings = querySnapshot.docs.map(doc => ({
@@ -79,22 +80,9 @@ export default function MarketplaceHome() {
         ...doc.data()
       }));
 
-      // If Firestore is empty, fallback to backend API for demo purposes
-      if (firestoreListings.length === 0) {
-        const response = await fetch(`${API_BASE_URL}/listings`);
-        const data = await response.json();
-        setListings(data);
-      } else {
-        setListings(firestoreListings);
-      }
+      setListings(firestoreListings);
     } catch (error) {
       console.error('Error fetching homepage listings:', error);
-      // Final fallback to backend API
-      try {
-        const response = await fetch(`${API_BASE_URL}/listings`);
-        const data = await response.json();
-        setListings(data);
-      } catch (e) { }
     } finally {
       setLoading(false);
     }

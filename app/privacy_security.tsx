@@ -23,7 +23,7 @@ const PRIVACY_DEFAULTS: Record<PrivacyField, boolean> = {
 export default function PrivacySecurityScreen() {
     const router = useRouter();
     const { colors } = useTheme();
-    const { user } = useAuth();
+    const { user, deleteAccount } = useAuth();
 
     // ── Privacy toggle state ──
     const [privacy, setPrivacy] = useState<Record<PrivacyField, boolean>>(PRIVACY_DEFAULTS);
@@ -107,7 +107,22 @@ export default function PrivacySecurityScreen() {
             'This will permanently delete your account and all your listings. This action cannot be undone.',
             [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete Account', style: 'destructive', onPress: () => Alert.alert('Account deletion request submitted.') },
+                {
+                    text: 'Delete Account', style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const result = await deleteAccount();
+                            if (result.success) {
+                                Alert.alert('Account Deleted', 'Your account and data have been removed.');
+                                // Auth state change will handle navigation
+                            } else {
+                                Alert.alert('Deletion Failed', result.error);
+                            }
+                        } catch (err: any) {
+                            Alert.alert('Error', err.message || 'Could not complete deletion.');
+                        }
+                    }
+                },
             ]
         );
     };
@@ -217,21 +232,7 @@ export default function PrivacySecurityScreen() {
                 {/* ═══════ DATA & ACCOUNT ═══════ */}
                 <SectionHeader label="Data & Account" colors={colors} />
                 <SettingsCard colors={colors}>
-                    <TouchableOpacity
-                        onPress={() => Alert.alert('Data Export', 'Your data export will be emailed to ' + (user?.email || 'your email') + ' within 24 hours.')}
-                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border + '60' }}
-                    >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                            <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(34,211,238,0.15)', alignItems: 'center', justifyContent: 'center' }}>
-                                <MaterialIcons name="download" size={20} color="#22d3ee" />
-                            </View>
-                            <View>
-                                <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>Export My Data</Text>
-                                <Text style={{ fontSize: 12, color: colors.textSecondary }}>Download a copy of your account data</Text>
-                            </View>
-                        </View>
-                        <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
-                    </TouchableOpacity>
+
                     <TouchableOpacity
                         onPress={handleDeleteAccount}
                         style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 }}

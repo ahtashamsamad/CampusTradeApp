@@ -85,28 +85,20 @@ export default function ItemSoldScreen() {
 
                     <View className="my-4 h-[1px] w-full bg-surface-highlight/50" />
 
-                    <TouchableOpacity className="flex-row w-full items-center justify-between group">
-                        <Text className="text-sm font-medium text-text-secondary">Balance updated in Wallet</Text>
-                        <MaterialIcons name="arrow-forward" size={18} color="#6366f1" />
-                    </TouchableOpacity>
+                    <View className="flex-row w-full items-center justify-between group">
+                        <Text className="text-sm font-medium text-text-secondary">Item status updated to Sold</Text>
+                        <MaterialIcons name="check-circle" size={18} color="#10b981" />
+                    </View>
                 </View>
 
                 {/* Actions */}
                 <View className="w-full gap-3">
                     <TouchableOpacity 
                         className="flex-row w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 px-4 shadow-sm shadow-primary/25"
-                        onPress={() => router.push({
-                            pathname: '/rate_review',
-                            params: {
-                                sellerId: buyer?.id, // In this case we are rating the buyer
-                                listingId: params.id,
-                                listingTitle: params.title,
-                                mode: 'seller-rating-buyer'
-                            }
-                        } as any)}
+                        onPress={() => router.push('/manage_listings')}
                     >
-                        <MaterialIcons name="star" size={20} color="white" />
-                        <Text className="text-base font-semibold text-white">Rate the transaction</Text>
+                        <MaterialIcons name="storefront" size={20} color="white" />
+                        <Text className="text-base font-semibold text-white">View My Listings</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         className="flex-row w-full items-center justify-center gap-2 rounded-lg bg-surface-dark py-3.5 px-4 border border-surface-highlight"

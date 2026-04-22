@@ -9,6 +9,8 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { storage } from '@/src/config/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const LabeledInput = ({ label, field, placeholder, colors, form, update, multiline = false, keyboardType = 'default', editable = true }: any) => (
     <View style={{ marginBottom: 16 }}>
@@ -66,15 +68,52 @@ export default function EditProfileScreen() {
     const update = (field: string, value: string) =>
         setForm(p => ({ ...p, [field]: value }));
 
+    const uploadImage = async (uri: string): Promise<string> => {
+        try {
+            const userId = user?.id || 'anonymous';
+            const storageRef = ref(storage, `avatars/${userId}.jpg`);
+            
+            // Convert local URI to blob
+            const response = await fetch(uri);
+            const blob = await response.blob();
+            
+            // Upload to Firebase Storage
+            await uploadBytes(storageRef, blob);
+            
+            // Get download URL
+            return await getDownloadURL(storageRef);
+        } catch (error: any) {
+            console.error("Avatar upload error:", error);
+            throw error;
+        }
+    };
+
     const handlePickAvatar = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert("Permission Required", "Please allow access to your photos to change your avatar.");
+            return;
+        }
+
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [1, 1],
             quality: 0.7,
         });
+
         if (!result.canceled && result.assets[0]) {
-            update('avatar', result.assets[0].uri);
+            setSaving(true);
+            try {
+                const downloadUrl = await uploadImage(result.assets[0].uri);
+                update('avatar', downloadUrl);
+                // Also update user immediately in AuthContext if desired, 
+                // but handleSave will do it for all fields.
+            } catch (error) {
+                Alert.alert("Error", "Failed to upload avatar. Please try again.");
+            } finally {
+                setSaving(false);
+            }
         }
     };
 
@@ -165,7 +204,6 @@ export default function EditProfileScreen() {
                     backgroundColor: colors.surface, marginBottom: 16,
                 }}>
                     {[
-                        { label: 'Rating', value: `⭐ ${user?.rating?.toFixed(1) || '—'}` },
                         { label: 'Sales', value: `${user?.totalSales || 0}` },
                         { label: 'Member Since', value: user?.memberSince || '—' },
                     ].map(({ label, value }) => (

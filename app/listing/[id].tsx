@@ -40,6 +40,11 @@ export default function ListingDetailsScreen() {
 
             if (docSnap.exists()) {
                 const data: any = { id: docSnap.id, ...docSnap.data() };
+                // Normalize: Firestore listings store the seller as 'userId', 
+                // but the rest of the app expects 'sellerId'
+                if (!data.sellerId && data.userId) {
+                    data.sellerId = data.userId;
+                }
                 setListing(data);
                 if (data.sellerId) fetchSellerInfo(data.sellerId);
             } else {
@@ -96,7 +101,14 @@ export default function ListingDetailsScreen() {
             return;
         }
 
-        if (user.id === listing.sellerId) {
+        const sellerId = listing.sellerId || listing.userId;
+
+        if (!sellerId) {
+            Alert.alert("Error", "Seller information is unavailable for this listing.");
+            return;
+        }
+
+        if (user.id === sellerId) {
             Alert.alert("Wait", "You cannot message yourself about your own listing.");
             return;
         }
@@ -104,7 +116,7 @@ export default function ListingDetailsScreen() {
         try {
             setLoading(true);
 
-            // 1. Check if a chat already exists between these two users
+            // 1. Check if a chat already exists for this specific listing between these two users
             const chatsRef = collection(db, 'chats');
             const q = query(
                 chatsRef,
@@ -114,10 +126,13 @@ export default function ListingDetailsScreen() {
             const querySnapshot = await getDocs(q);
             let existingChatId = null;
 
-            // Find if any of the user's chats have the seller as the other participant
+            // Find if any of the user's chats match both the seller AND this listing
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                if (data.participantIds.includes(listing.sellerId)) {
+                if (
+                    data.participantIds.includes(sellerId) &&
+                    data.listingId === listing.id
+                ) {
                     existingChatId = doc.id;
                 }
             });
@@ -129,14 +144,14 @@ export default function ListingDetailsScreen() {
             }
 
             // 2. If it doesn't exist, create a new one
-            const sellerSnap = await getDoc(doc(db, 'users', listing.sellerId));
+            const sellerSnap = await getDoc(doc(db, 'users', sellerId));
             const sellerData = sellerSnap.exists() ? sellerSnap.data() : { name: 'Seller' };
 
             const chatData = {
                 listingId: listing.id,
                 listingTitle: listing.title,
                 listingImage: listing.images?.[0] || listing.imageUrl || listing.image || null,
-                participantIds: [user.id, listing.sellerId],
+                participantIds: [user.id, sellerId],
                 participants: [
                     { 
                         id: user.id, 
@@ -144,7 +159,7 @@ export default function ListingDetailsScreen() {
                         avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=random` 
                     },
                     { 
-                        id: listing.sellerId, 
+                        id: sellerId, 
                         name: sellerData.name || sellerData.displayName || 'Seller', 
                         avatar: sellerData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(sellerData.name || 'S')}&background=random` 
                     }
@@ -152,15 +167,15 @@ export default function ListingDetailsScreen() {
                 lastMessage: `Interested in ${listing.title}`,
                 lastActivity: serverTimestamp(),
                 lastMessageTimestamp: serverTimestamp(),
-                unreadCounts: { [listing.sellerId]: 1, [user.id]: 0 },
+                unreadCounts: { [sellerId]: 1, [user.id]: 0 },
                 createdAt: serverTimestamp()
             };
 
             const newChatRef = await addDoc(collection(db, 'chats'), chatData);
             router.push(`/chat/${newChatRef.id}` as any);
 
-        } catch (error) {
-            console.error("Error creating/finding chat:", error);
+        } catch (error: any) {
+            console.error("Error creating/finding chat:", error?.message || error);
             Alert.alert("Message Error", "Could not start conversation. Please try again.");
         } finally {
             setLoading(false);
@@ -358,7 +373,7 @@ export default function ListingDetailsScreen() {
                             Seller
                         </Text>
                         <TouchableOpacity
-                            onPress={() => router.push(`/seller_reviews?sellerId=${listing.sellerId}` as any)}
+                            onPress={() => router.push(`/user/${listing.sellerId}` as any)}
                             style={{
                                 flexDirection: 'row', alignItems: 'center', padding: 14,
                                 backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border,
@@ -380,9 +395,9 @@ export default function ListingDetailsScreen() {
                                     {seller?.name || seller?.displayName || 'Campus Student'}
                                 </Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 3, gap: 4 }}>
-                                    <MaterialIcons name="star" size={14} color="#facc15" />
+                                    <MaterialIcons name="storefront" size={14} color={colors.textSecondary} />
                                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
-                                        {seller?.rating?.toFixed(1) || '0.0'} ({seller?.reviewCount || 0} reviews)
+                                        {seller?.totalSales || 0} items sold
                                     </Text>
                                     {(seller?.isVerified || seller?.verified) && (
                                         <View style={{
@@ -445,7 +460,7 @@ export default function ListingDetailsScreen() {
                     <Text style={{ color: colors.textPrimary, fontWeight: '700', fontSize: 15 }}>Message</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    onPress={() => Alert.alert('Make Offer', 'Offer feature coming soon!')}
+                    onPress={handleMessageSeller}
                     style={{
                         flex: 1.4, backgroundColor: colors.primary,
                         paddingVertical: 14, borderRadius: 14,
@@ -455,8 +470,8 @@ export default function ListingDetailsScreen() {
                         shadowOpacity: 0.35, shadowRadius: 8, elevation: 6,
                     }}
                 >
-                    <MaterialIcons name="local-offer" size={18} color="white" />
-                    <Text style={{ color: 'white', fontWeight: '800', fontSize: 15 }}>Make Offer</Text>
+                    <MaterialIcons name="shopping-cart" size={18} color="white" />
+                    <Text style={{ color: 'white', fontWeight: '800', fontSize: 15 }}>Buy Now</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

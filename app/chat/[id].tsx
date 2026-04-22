@@ -214,14 +214,15 @@ export default function ChatRoomScreen() {
             // 3. Create a notification for the other user (shows up in Notifications screen)
             try {
                 await addDoc(collection(db, 'notifications'), {
-                    userId: otherId,
-                    senderId: user.id,
-                    title: `New Message from ${user.name || 'Campus Student'}`,
-                    message: text,
+                    toUserId: otherId,
+                    fromUserId: user.id,
+                    fromUserName: user.name || 'Campus Student',
+                    fromUserAvatar: user.profilePicture || null,
                     type: 'message',
-                    chatId: id,
-                    listingId: chatMeta?.listingId || '',
-                    read: false,
+                    title: `New message from ${user.name || 'Campus Student'}`,
+                    body: text.length > 50 ? text.substring(0, 50) + '...' : text,
+                    relatedId: id,
+                    isRead: false,
                     createdAt: serverTimestamp(),
                 });
             } catch (notifErr) {
@@ -347,31 +348,18 @@ export default function ChatRoomScreen() {
 
                     {chatMeta.listing.status === 'sold' && (
                         <View style={{
-                            backgroundColor: colors.primary + '15',
+                            backgroundColor: '#065f4620',
                             padding: 12,
                             borderBottomWidth: 1,
-                            borderBottomColor: colors.primary + '30',
+                            borderBottomColor: '#10b98130',
                             flexDirection: 'row',
                             alignItems: 'center',
-                            justifyContent: 'space-between'
+                            gap: 8,
                         }}>
-                            <View style={{ flex: 1, marginRight: 8 }}>
-                                <Text style={{ fontSize: 13, color: colors.textPrimary, fontWeight: '600' }}>Trade Complete!</Text>
-                                <Text style={{ fontSize: 11, color: colors.textSecondary }}>Rate your experience with {chatMeta.otherParticipant?.name}</Text>
-                            </View>
-                            <TouchableOpacity 
-                                onPress={() => router.push({
-                                    pathname: '/rate_review',
-                                    params: { 
-                                        sellerId: chatMeta.otherParticipant?.id,
-                                        listingId: chatMeta.listing.id,
-                                        listingTitle: chatMeta.listing.title
-                                    }
-                                } as any)}
-                                style={{ backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
-                            >
-                                <Text style={{ color: 'white', fontSize: 12, fontWeight: '700' }}>Rate Now</Text>
-                            </TouchableOpacity>
+                            <MaterialIcons name="check-circle" size={20} color="#10b981" />
+                            <Text style={{ fontSize: 13, color: colors.textPrimary, fontWeight: '600', flex: 1 }}>
+                                Trade Complete! This item has been sold.
+                            </Text>
                         </View>
                     )}
                 </View>

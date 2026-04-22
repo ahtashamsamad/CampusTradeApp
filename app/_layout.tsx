@@ -10,7 +10,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { useEffect, useRef } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Platform } from 'react-native';
+import { Platform, View, ActivityIndicator } from 'react-native';
 import { Notifications, isExpoGo, isBrowser } from '@/src/utils/notifications';
 
 // ──────────────────────────────────────────────────────────────
@@ -121,6 +121,21 @@ function RootLayoutNav() {
   // ── Notification observers (tap handling + cold-start) ──
   useNotificationObserver();
 
+  // Show a loading spinner while checking auth state to prevent flashing
+  if (isLoading) {
+    return (
+      <View style={{ 
+        flex: 1, 
+        backgroundColor: resolvedTheme === 'dark' ? '#020617' : '#ffffff', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <ActivityIndicator size="large" color="#6366f1" />
+        <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
+      </View>
+    );
+  }
+
   return (
     <NavThemeProvider value={resolvedTheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
@@ -131,14 +146,11 @@ function RootLayoutNav() {
         <Stack.Screen name="signup" options={{ headerShown: false }} />
         <Stack.Screen name="edit_profile" options={{ headerShown: false }} />
         <Stack.Screen name="privacy_security" options={{ headerShown: false }} />
-        <Stack.Screen name="payment_payouts" options={{ headerShown: false }} />
         <Stack.Screen name="manage_listings" options={{ headerShown: false }} />
-        <Stack.Screen name="seller_reviews" options={{ headerShown: false }} />
-        <Stack.Screen name="verification" options={{ headerShown: false }} />
-        <Stack.Screen name="events" options={{ headerShown: false }} />
-        <Stack.Screen name="rate_review" options={{ headerShown: false }} />
+        <Stack.Screen name="edit_listing/[id]" options={{ headerShown: false }} />
+
         <Stack.Screen name="item_sold" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+
       </Stack>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
     </NavThemeProvider>

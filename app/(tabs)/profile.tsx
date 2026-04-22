@@ -179,7 +179,7 @@ export default function ProfileScreen() {
                         flexDirection: 'row',
                     }}>
                         {[
-                            { label: 'Rating', value: `⭐ ${user.rating.toFixed(1)}` },
+                            { label: 'Saved', value: String((user.savedItems || []).length) },
                             { label: 'Sales', value: String(user.totalSales) },
                             { label: 'Member Since', value: user.memberSince },
                         ].map(({ label, value }, i, arr) => (
@@ -294,16 +294,10 @@ export default function ProfileScreen() {
                         <SettingsItem
                             icon="diversity-3" iconColor="#2dd4bf" iconBg="rgba(45,212,191,0.15)"
                             title="Community Guidelines" subtitle="How to trade safely" colors={colors}
+                            hasBorder={false}
                             onPress={() => Alert.alert('Community Guidelines', '• Be honest about item condition\n• Meet in public campus spaces\n• No counterfeit goods\n• Respect other students')}
                         />
-                        <SettingsItem
-                            icon="report-problem" iconColor="#f472b6" iconBg="rgba(244,114,182,0.15)"
-                            title="Report a Problem" subtitle="Something broken? Let us know" colors={colors} hasBorder={false}
-                            onPress={() => Alert.alert('Report a Problem', 'Please describe the issue. We will respond within 24 hours.', [
-                                { text: 'Cancel', style: 'cancel' },
-                                { text: 'Send Report', onPress: () => Alert.alert('✅ Report sent — thank you!') },
-                            ])}
-                        />
+
                     </SettingsGroup>
 
                     {/* ── Footer ── */}

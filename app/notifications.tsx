@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/src/config/firebase';
@@ -12,21 +13,23 @@ import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, deleteDo
 
 type NotificationItem = {
     id: string;
-    type: 'message' | 'sale' | 'price' | 'review' | 'system';
+    toUserId?: string;
+    fromUserId?: string;
+    fromUserName?: string;
+    fromUserAvatar?: string;
+    type: 'message' | 'sale' | 'price' | 'system' | 'listing' | 'offer';
     title: string;
     body: string;
+    relatedId?: string;
+    isRead: boolean;
     time: string;
-    read: boolean;
     createdAt?: any;
-    chatId?: string;
-    senderId?: string;
 };
 
 const typeConfig: Record<NotificationItem['type'], { icon: string; bg: string; color: string }> = {
     message: { icon: 'chat', bg: '#1d4ed8', color: '#93c5fd' },
     sale: { icon: 'sell', bg: '#065f46', color: '#6ee7b7' },
     price: { icon: 'trending-down', bg: '#7c3aed', color: '#c4b5fd' },
-    review: { icon: 'star', bg: '#92400e', color: '#fcd34d' },
     system: { icon: 'info', bg: '#374151', color: '#9ca3af' },
 };
 
@@ -41,9 +44,26 @@ export default function NotificationsScreen() {
     useEffect(() => {
         if (!user?.id) return;
 
+        const markAllAsRead = async () => {
+            try {
+                const qRead = query(
+                    collection(db, 'notifications'),
+                    where('toUserId', '==', user.id),
+                    where('isRead', '==', false)
+                );
+                const snapshot = await getDocs(qRead);
+                snapshot.docs.forEach(async (docSnap) => {
+                    await updateDoc(doc(db, 'notifications', docSnap.id), { isRead: true });
+                });
+            } catch (e) {
+                console.error("Error marking all as read on open", e);
+            }
+        };
+        markAllAsRead();
+
         const q = query(
             collection(db, 'notifications'),
-            where('recipientId', '==', user.id),
+            where('toUserId', '==', user.id),
             orderBy('createdAt', 'desc')
         );
 
@@ -60,10 +80,7 @@ export default function NotificationsScreen() {
             setNotifications(data);
             setLoading(false);
 
-            // Optional: Seed demo notifications if none exist for a better first-time experience
-            if (data.length === 0 && loading) {
-                seedDemoNotifications(user.id);
-            }
+
         }, (error: any) => {
             if (error.code === 'failed-precondition') {
                 console.warn("Notifications index building - items will appear soon.");
@@ -93,36 +110,17 @@ export default function NotificationsScreen() {
         }
     };
 
-    const seedDemoNotifications = async (userId: string) => {
-        // Only seed once for demo purposes
-        const demos = [
-            {
-                recipientId: userId, type: 'message', title: 'New message from Sara',
-                body: 'Hey! Is the calculus textbook still available?', read: false,
-                chatId: 'demo-chat-1', senderId: 'sara-123',
-                createdAt: serverTimestamp()
-            },
-            {
-                recipientId: userId, type: 'sale', title: 'Item Sold 🎉',
-                body: 'Your "Physics Lab Kit" has been sold to Alex!', read: false,
-                createdAt: serverTimestamp()
-            }
-        ];
-        
-        for (const demo of demos) {
-            await addDoc(collection(db, 'notifications'), demo);
-        }
-    };
 
-    const unreadCount = notifications.filter(n => !n.read).length;
-    const displayed = activeFilter === 'unread' ? notifications.filter(n => !n.read) : notifications;
+
+    const unreadCount = notifications.filter(n => !n.isRead).length;
+    const displayed = activeFilter === 'unread' ? notifications.filter(n => !n.isRead) : notifications;
 
     const markAllRead = async () => {
         try {
             const batch = writeBatch(db);
-            notifications.filter(n => !n.read).forEach(n => {
+            notifications.filter(n => !n.isRead).forEach(n => {
                 const ref = doc(db, 'notifications', n.id);
-                batch.update(ref, { read: true });
+                batch.update(ref, { isRead: true });
             });
             await batch.commit();
         } catch (e) {
@@ -133,7 +131,7 @@ export default function NotificationsScreen() {
     const markRead = async (id: string) => {
         try {
             const ref = doc(db, 'notifications', id);
-            await updateDoc(ref, { read: true });
+            await updateDoc(ref, { isRead: true });
         } catch (e) {
             console.error('Error marking as read:', e);
         }
@@ -142,23 +140,28 @@ export default function NotificationsScreen() {
     const handleNotificationClick = async (notif: NotificationItem) => {
         try {
             // 1. Mark as read in Firestore
-            if (!notif.read) {
+            if (!notif.isRead) {
                 const ref = doc(db, 'notifications', notif.id);
-                await updateDoc(ref, { read: true });
+                await updateDoc(ref, { isRead: true });
             }
 
-            // 2. Navigate using navigation pattern (router.push for expo-router)
-            if (notif.chatId) {
-                // Navigate to the Chat screen with the chatId parameter
+            // 2. Navigate based on type
+            if (notif.type === 'message') {
                 router.push({
                     pathname: '/chat/[id]',
-                    params: { id: notif.chatId }
+                    params: { id: notif.relatedId }
                 } as any);
-            } else {
-                // Fallback for other notification types
-                if (notif.type === 'sale') {
-                    router.push('/manage_listings' as any);
-                }
+            } else if (notif.type === 'listing') {
+                router.push({
+                    pathname: '/listing/[id]',
+                    params: { id: notif.relatedId }
+                } as any);
+            } else if (notif.type === 'offer') {
+                router.push({
+                    pathname: '/manage_listings'
+                } as any);
+            } else if (notif.type === 'sale') {
+                router.push('/manage_listings' as any);
             }
         } catch (e) {
             console.error('Error handling notification click:', e);
@@ -302,13 +305,13 @@ export default function NotificationsScreen() {
                                 style={{
                                     flexDirection: 'row', alignItems: 'flex-start',
                                     paddingHorizontal: 16, paddingVertical: 14,
-                                    backgroundColor: item.read ? colors.background : colors.surface,
+                                    backgroundColor: item.isRead ? colors.background : colors.surface,
                                     borderBottomWidth: 1, borderBottomColor: colors.border,
                                     gap: 12,
                                 }}
                             >
                                 {/* Unread dot */}
-                                {!item.read && (
+                                {!item.isRead && (
                                     <View style={{
                                         position: 'absolute', left: 4, top: '50%',
                                         width: 6, height: 6, borderRadius: 3,
@@ -316,20 +319,30 @@ export default function NotificationsScreen() {
                                     }} />
                                 )}
 
-                                {/* Icon */}
-                                <View style={{
-                                    width: 44, height: 44, borderRadius: 22,
-                                    backgroundColor: cfg.bg + '33',
-                                    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                }}>
-                                    <MaterialIcons name={cfg.icon as any} size={22} color={cfg.color} />
-                                </View>
+                                {/* Icon or Avatar */}
+                                {item.fromUserAvatar ? (
+                                    <View style={{
+                                        width: 44, height: 44, borderRadius: 22,
+                                        overflow: 'hidden', flexShrink: 0,
+                                        backgroundColor: colors.chipBg,
+                                    }}>
+                                        <Image source={{ uri: item.fromUserAvatar }} style={{ width: '100%', height: '100%' }} />
+                                    </View>
+                                ) : (
+                                    <View style={{
+                                        width: 44, height: 44, borderRadius: 22,
+                                        backgroundColor: cfg.bg + '33',
+                                        alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                    }}>
+                                        <MaterialIcons name={cfg.icon as any} size={22} color={cfg.color} />
+                                    </View>
+                                )}
 
                                 {/* Content */}
                                 <View style={{ flex: 1 }}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                         <Text style={{
-                                            fontSize: 14, fontWeight: item.read ? '600' : '700',
+                                            fontSize: 14, fontWeight: item.isRead ? '600' : '700',
                                             color: colors.textPrimary, flex: 1, marginRight: 8,
                                         }} numberOfLines={1}>
                                             {item.title}

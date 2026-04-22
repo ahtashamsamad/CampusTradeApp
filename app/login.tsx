@@ -145,35 +145,6 @@ export default function LoginScreen() {
                                 : <Text style={{ color: 'white', fontSize: 16, fontWeight: '800' }}>Sign In</Text>
                             }
                         </TouchableOpacity>
-
-                        {/* Divider */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 4 }}>
-                            <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-                            <Text style={{ color: colors.textMuted, fontSize: 13 }}>or continue with</Text>
-                            <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-                        </View>
-
-                        {/* Google / Apple */}
-                        <View style={{ flexDirection: 'row', gap: 12 }}>
-                            {[
-                                { label: 'Google', icon: 'language' },
-                                { label: 'Apple', icon: 'phone-iphone' },
-                            ].map(({ label, icon }) => (
-                                <TouchableOpacity
-                                    key={label}
-                                    onPress={() => Alert.alert(`${label} Sign In`, 'Social login coming soon!')}
-                                    style={{
-                                        flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-                                        gap: 8, paddingVertical: 13, borderRadius: 14,
-                                        borderWidth: 1.5, borderColor: colors.border,
-                                        backgroundColor: colors.surface,
-                                    }}
-                                >
-                                    <MaterialIcons name={icon as any} size={20} color={colors.textPrimary} />
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>{label}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
                     </View>
 
                     {/* Footer */}
