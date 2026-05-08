@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Item Sold Confirmation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1754cf",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col items-center justify-center antialiased selection:bg-primary/30">
+<!-- Main Container -->
+<div class="relative flex w-full max-w-md flex-col overflow-hidden bg-background-light dark:bg-background-dark min-h-screen">
+<!-- Header / Navigation -->
+<header class="flex items-center justify-end px-4 py-3">
+<button class="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</header>
+<!-- Content Area -->
+<main class="flex flex-1 flex-col items-center px-6 pt-2 pb-8 animate-in fade-in zoom-in duration-500">
+<!-- Hero Illustration -->
+<div class="mb-8 relative flex items-center justify-center">
+<!-- Abstract Confetti Background -->
+<div class="absolute inset-0 -z-10 scale-150 opacity-20">
+<div class="absolute top-0 left-10 h-2 w-2 rounded-full bg-primary animate-pulse"></div>
+<div class="absolute bottom-10 right-10 h-3 w-3 rounded-full bg-primary/60"></div>
+<div class="absolute top-10 right-20 h-2 w-2 rotate-45 bg-blue-400"></div>
+</div>
+<div class="relative flex h-40 w-40 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20 ring-1 ring-primary/20 shadow-[0_0_30px_rgba(23,84,207,0.15)]">
+<span class="material-symbols-outlined text-6xl text-primary font-bold" style="font-size: 80px; font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Headlines -->
+<h1 class="text-center text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 mb-2">
+                Cha-ching! Item Sold.
+            </h1>
+<p class="text-center text-lg text-slate-600 dark:text-slate-400 mb-8">
+                You just earned <span class="text-primary font-semibold">$45.00</span>.
+            </p>
+<!-- Item Summary Card -->
+<div class="w-full rounded-xl bg-white dark:bg-[#1c2230] p-4 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 mb-8 transform transition hover:scale-[1.02] duration-200">
+<div class="flex items-center gap-4">
+<!-- Item Image -->
+<div class="h-16 w-16 shrink-0 rounded-lg bg-slate-200 dark:bg-slate-700 bg-cover bg-center" data-alt="Chemistry Textbook cover" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDeS0zZlZ5gWlgKN25putobZJewMckF8wtTy5uyP0rFWs_xF8y01iDkdnxyX7u4jQ6cjhKsTLQbuznv7eOEU2YGALKZgSNuM64HlGpyCh0A674VJP6TU8veBAXFfs-CVL8LacbuyRmcm9ProiV6NXoTyzTRKCCLNeRAjEYOS8QpJF9eAjj0hhy8iz121yBEnmiHwDYbULh8S_yyKCU0gG6Rkp6o3J6YeobQnkvcmf36gExaAWVrd3lStOIf7HW7vDVymAL68N_zzT5I');"></div>
+<!-- Item Details -->
+<div class="flex flex-1 flex-col justify-center overflow-hidden">
+<h3 class="truncate text-base font-semibold text-slate-900 dark:text-slate-100">Chemistry 101 Textbook</h3>
+<div class="mt-1 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px]">person</span>
+<span>Sold to Alex M.</span>
+</div>
+</div>
+<!-- Status Badge -->
+<div class="shrink-0 rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-green-600/20">
+                        Paid
+                    </div>
+</div>
+<!-- Separator -->
+<div class="my-4 h-px w-full bg-slate-100 dark:bg-slate-700/50"></div>
+<!-- Wallet Link -->
+<button class="group flex w-full items-center justify-between text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors">
+<span>Balance updated in Wallet</span>
+<span class="material-symbols-outlined text-lg transition-transform group-hover:translate-x-1">arrow_forward</span>
+</button>
+</div>
+<!-- Actions -->
+<div class="flex w-full flex-col gap-3">
+<!-- Share Button (Primary) -->
+<button class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 px-4 text-base font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-blue-600 active:scale-[0.98]">
+<span class="material-symbols-outlined text-[20px]">share</span>
+                    Share your success
+                </button>
+<!-- List Another Button (Secondary) -->
+<button class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-200 dark:bg-[#1c2230] py-3.5 px-4 text-base font-semibold text-slate-900 dark:text-slate-200 ring-1 ring-transparent hover:ring-slate-300 dark:hover:ring-slate-700 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+                    Sell something else
+                </button>
+</div>
+</main>
+<!-- Footer / Secondary Nav -->
+<footer class="mt-auto px-6 pb-6 pt-2">
+<button class="w-full text-center text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-500 dark:hover:text-slate-300 transition-colors py-2">
+                Return to Home
+            </button>
+</footer>
+</div>
+</body></html>

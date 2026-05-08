@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Wishlist</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+            extend: {
+                colors: {
+                "primary": "#1754cf",
+                "background-light": "#f6f6f8",
+                "background-dark": "#111621",
+                },
+                fontFamily: {
+                "display": ["Inter", "sans-serif"]
+                },
+                borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col antialiased selection:bg-primary selection:text-white">
+<!-- Header Area -->
+<header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+<div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+<div>
+<h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">My Wishlist</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">8 items saved</p>
+</div>
+<button class="relative p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors group">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300">sort</span>
+<span class="sr-only">Sort Items</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-24">
+<!-- Filter Tabs -->
+<div class="flex gap-2 overflow-x-auto pb-4 no-scrollbar mb-2">
+<button class="px-4 py-1.5 rounded-full bg-primary text-white text-sm font-medium whitespace-nowrap shadow-sm shadow-primary/20">All Items</button>
+<button class="px-4 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">Books</button>
+<button class="px-4 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">Electronics</button>
+<button class="px-4 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">Furniture</button>
+</div>
+<!-- Grid Layout -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Item 1: Available -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1c2230] rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800/50 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300">
+<div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img alt="Calculus textbook on a wooden desk" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Calculus textbook on a wooden desk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3ZAlxi8LYka3ErvjtGcW8iuLJpdScKJEt9802BGjRZJ-My7QuCQWKvScjwU3nYY0etWSmXCjMowQLL_6fu4OlUmMbP-z7j5GhaAVe6pHZl59MOs2w9sw4NLNCX1tpVZUDbydVUxBc0shrO79jSCnbP6820Md-xoGu7p2hI8Np1mCUzmW5p8f-30XU0KFfhRUx5acP0e85XII_USk6_H65dDCqcxHPYjSXF9_ibZPs1KyMES5LGoQugGh2Tu_UppyAb9_kKxdkxQIX"/>
+<div class="absolute top-2 right-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="inline-flex items-center rounded-md bg-green-500/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                            Available
+                        </span>
+</div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="text-sm font-medium text-slate-900 dark:text-white line-clamp-2 leading-tight mb-1">Calculus: Early Transcendentals</h3>
+<div class="mt-auto flex items-end justify-between">
+<p class="text-base font-bold text-slate-900 dark:text-white">$45.00</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">2d ago</p>
+</div>
+</div>
+</div>
+<!-- Item 2: Pending -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1c2230] rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800/50 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300">
+<div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img alt="Small black mini fridge" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Small black mini fridge" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBenu7EKSVo1g7_rScNoHxz8RAHJXP0nQ_d6kMaTwDX5Z0lqKSaI3ygkZSxbz1Nedu1UGAo9IOcftGVoIwwp71IK7wDtmwtFMC2Pgd2-vDLRzqe9XXT3IN5sODT6tZVfr2T5RLYa_VkoWsBQXaprIA70gXiurwKUlY2cC33ixp6AJqfCWvquw3i5WtuoVUXJl1nEUoMkBT4GaeDRnfK8fCzrJmOxmXVann-4Zp0jtX4T73jai3xWTNmh_l4_vUruTjNC1QzlbOB2xZD"/>
+<div class="absolute top-2 right-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="inline-flex items-center rounded-md bg-amber-500/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                            Pending
+                        </span>
+</div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="text-sm font-medium text-slate-900 dark:text-white line-clamp-2 leading-tight mb-1">Mini Fridge - Black</h3>
+<div class="mt-auto flex items-end justify-between">
+<p class="text-base font-bold text-slate-900 dark:text-white">$30.00</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">4h ago</p>
+</div>
+</div>
+</div>
+<!-- Item 3: Sold (Dimmed) -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1c2230] rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800/50 opacity-60 hover:opacity-100 transition-all duration-300">
+<div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-800 grayscale">
+<img alt="Graphing calculator on desk" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Graphing calculator on desk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAyCIiU3eoKICiMRr0Xa6t6UR33tU5arVk8Ye8RGUVbgoEY-yui2oj63n4M_pLHMW-7a7oNUX5UlITstixRvesoS-wmT9V5X4saBaz5vgxuHdHFNbrd5y1fLshetZSTkR5Evj81m47M-zCkNYSWkGhQZ2kJJyTHFO0aiKiQgUbXKs_V8LEDLW3tEOdGOe4nxXLEfYaTpUGD8Uaughw-gGLsKY1IW4rCaT92FGuXih4UY3G3vNYX5p0Ki07mvpFhghlbE8AIeWaciBK"/>
+<div class="absolute inset-0 bg-black/10"></div>
+<div class="absolute top-2 right-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="inline-flex items-center rounded-md bg-slate-600/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                            Sold
+                        </span>
+</div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 line-clamp-2 leading-tight mb-1 line-through decoration-slate-400">Graphing Calculator TI-84</h3>
+<div class="mt-auto flex items-end justify-between">
+<p class="text-base font-bold text-slate-500 dark:text-slate-400">$80.00</p>
+<p class="text-[10px] text-slate-400 dark:text-slate-500">1w ago</p>
+</div>
+</div>
+</div>
+<!-- Item 4: Available -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1c2230] rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800/50 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300">
+<div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img alt="Modern desk lamp lit up" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Modern desk lamp lit up" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnrbyd1SfROGEl3hQ84aRsybBsRFR89ba_Bg9k3wqJ74hPyTwtmtF2aF9mUGMjrzkLLkxL59n7lQfgWrc6J_0HlNNIDJehx6m5_wX6VaY08SqYCWqDZGR-EgQztSAcp6Srx4UBh7AXWA0jWKoDoqfYkexW9I0_29zLYMTwca5WYhcVtJ5dSWji9S141jCuEOmHP0dHwPyyQ5jv9lh-liFEmxoEw4wIchympsHOZAaMpQBVl6TCHVnOOOj8lVD3HUJTQZmKDe5DTJkf"/>
+<div class="absolute top-2 right-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="inline-flex items-center rounded-md bg-green-500/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                            Available
+                        </span>
+</div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="text-sm font-medium text-slate-900 dark:text-white line-clamp-2 leading-tight mb-1">LED Desk Lamp with USB Port</h3>
+<div class="mt-auto flex items-end justify-between">
+<p class="text-base font-bold text-slate-900 dark:text-white">$15.00</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">5h ago</p>
+</div>
+</div>
+</div>
+<!-- Item 5: Available -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1c2230] rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800/50 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300">
+<div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img alt="Headphones on a table" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Headphones on a table" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBu5lQrfkYpZsLSvKJ_JmiQmunXHDjhEUOm1wFMRxifZZLwbQ4t472r0fi12kdZfcpoCwVxQolM10l05JPSLmRoRXCezNfIuN9lsTN4Hry-M28aTU-Ff0wQo6yhwvR8hWaxWsGdx9bzs1Va6aCmDuy0dIGWTZg24QaGrPUq8_ZLdW0n5hw2lYnmfh4WTwpakFnqcp-w965SeHdmiDfA6u9W1E27S2T-dJyA8WAYNBb7_HGKlPfXfPDGCqqJJEqWLn9CFDlDcXu09Aq-"/>
+<div class="absolute top-2 right-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="inline-flex items-center rounded-md bg-green-500/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                            Available
+                        </span>
+</div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="text-sm font-medium text-slate-900 dark:text-white line-clamp-2 leading-tight mb-1">Sony Noise Cancelling Headphones</h3>
+<div class="mt-auto flex items-end justify-between">
+<p class="text-base font-bold text-slate-900 dark:text-white">$120.00</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">1d ago</p>
+</div>
+</div>
+</div>
+<!-- Item 6: Sold (Dimmed) -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1c2230] rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800/50 opacity-60 hover:opacity-100 transition-all duration-300">
+<div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-800 grayscale">
+<img alt="Coffee maker on kitchen counter" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Coffee maker on kitchen counter" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCN9g8RPdi61xYhYjB23vU1wov9VEANsGZIi8PWrJmm_DhLoLJpVyAOM_mBjqqmQhE_kKDakXig_iq9EdJb1LPXVZErl6CAbtw1ktfTSBaaIItyS8g3hLgFEzewljpI3DV31nLu2-zrIOduIb_4c-5hrhNCeMwAk0oVNIEmTo1D6XIT8T5XmV_h7O7BL_oSoCtGovHNPz2U1mZPOmWpm-q683v_WsgcjA6x47JsOi5-69urGHL0V_elfWjsCLeefP1f19rVN5oqu6IL"/>
+<div class="absolute inset-0 bg-black/10"></div>
+<div class="absolute top-2 right-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="inline-flex items-center rounded-md bg-slate-600/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                            Sold
+                        </span>
+</div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 line-clamp-2 leading-tight mb-1 line-through decoration-slate-400">Keurig Coffee Maker</h3>
+<div class="mt-auto flex items-end justify-between">
+<p class="text-base font-bold text-slate-500 dark:text-slate-400">$20.00</p>
+<p class="text-[10px] text-slate-400 dark:text-slate-500">2w ago</p>
+</div>
+</div>
+</div>
+<!-- Item 7: Available -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1c2230] rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800/50 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300">
+<div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img alt="Smart watch on wrist" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Smart watch on wrist" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE56cMg-cvRKLOAnJBkJXSddbqi2hrD4GP7WDu9CT9ESEPlgkkV5V0E4vS-zzSGAkXnfRcTY3mbkAUZ3CcrsGozExDHsggR62Usx8XMrk0lS5Ep4pImkGHDPosIkIbMQvCD7hqn5hlCVzyQm22xXiLVj0Tjbd7TvraqHnWw3XshIo5q7otwVYyiSwaHMWmPmmeHv5nO3dOMBsucnkTXtPe-8TX9RF8duUMFd7pPW4L9t0qeGhsbjLcxTlM8fNXlxZ4fhLYiHCVJWf5"/>
+<div class="absolute top-2 right-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="inline-flex items-center rounded-md bg-green-500/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                            Available
+                        </span>
+</div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="text-sm font-medium text-slate-900 dark:text-white line-clamp-2 leading-tight mb-1">Apple Watch Series 6</h3>
+<div class="mt-auto flex items-end justify-between">
+<p class="text-base font-bold text-slate-900 dark:text-white">$150.00</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">3h ago</p>
+</div>
+</div>
+</div>
+<!-- Item 8: Available -->
+<div class="group relative flex flex-col bg-white dark:bg-[#1c2230] rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800/50 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300">
+<div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+<img alt="Extension cord coiled up" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Extension cord coiled up" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeYmjPmYBPaF9USfVx34lolKNgo1ttds1jsrMnY2_xBNE8rw7_gguHAzqmK_v9Lc25IGDX1sT0Uxdm1C8Et0fI6DiA0iRAepz47EOMv4EhUeB5lb3z9LaMrTrcaYmGPSCEe0K8y9uhwOWuR1qdalQB4Qz6T4QWceoz2_0ItrbvRaXBs0HRRfak9qu77_6-JJX3MP5FLx2WwS0Iusf8w9WboPqRXUZfDmqlyyyt3xTVRsIzbynHpsWyNDl6xP8SrAvAUynUfpkOz48U"/>
+<div class="absolute top-2 right-2 z-10">
+<button class="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="inline-flex items-center rounded-md bg-green-500/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                            Available
+                        </span>
+</div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="text-sm font-medium text-slate-900 dark:text-white line-clamp-2 leading-tight mb-1">Heavy Duty Extension Cord</h3>
+<div class="mt-auto flex items-end justify-between">
+<p class="text-base font-bold text-slate-900 dark:text-white">$5.00</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">6d ago</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Utility Button -->
+<div class="mt-8 flex justify-center">
+<button class="flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-full transition-colors w-full max-w-xs">
+<span class="material-symbols-outlined text-[18px]">cleaning_services</span>
+                Clear Unavailable Items
+            </button>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Fixed) -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-800 bg-background-light/90 dark:bg-[#111621]/90 backdrop-blur-lg pb-safe">
+<div class="max-w-md mx-auto flex justify-between items-center px-4 h-[64px]">
+<!-- Home -->
+<a class="flex flex-1 flex-col items-center justify-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 group-hover:text-primary dark:group-hover:text-primary transition-colors text-[26px]">home</span>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-primary dark:group-hover:text-primary transition-colors">Home</span>
+</a>
+<!-- Search -->
+<a class="flex flex-1 flex-col items-center justify-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 group-hover:text-primary dark:group-hover:text-primary transition-colors text-[26px]">search</span>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-primary dark:group-hover:text-primary transition-colors">Search</span>
+</a>
+<!-- Post (Center Highlighted) -->
+<a class="flex flex-1 flex-col items-center justify-center" href="#">
+<div class="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30 transform transition-transform hover:-translate-y-1">
+<span class="material-symbols-outlined text-white text-[28px]">add</span>
+</div>
+</a>
+<!-- Wishlist (Active) -->
+<a class="flex flex-1 flex-col items-center justify-center gap-1" href="#">
+<span class="material-symbols-outlined text-primary fill-1 text-[26px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-[10px] font-bold text-primary">Wishlist</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-1 flex-col items-center justify-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 group-hover:text-primary dark:group-hover:text-primary transition-colors text-[26px]">person</span>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-primary dark:group-hover:text-primary transition-colors">Profile</span>
+</a>
+</div>
+<!-- Safe area padding for iPhones -->
+<div class="h-4 bg-transparent w-full"></div>
+</nav>
+</body></html>

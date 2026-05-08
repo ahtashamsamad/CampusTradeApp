@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check admin role
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Listings - anyone can read, 
+    // only auth users can write
+    match /listings/{listingId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Users - auth users can read all, 
+    // own profile or admin can write
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && (
+        request.auth.uid == userId || isAdmin()
+      );
+    }
+    
+    // Notifications - users can only access 
+    // their own notifications
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && 
+        request.auth.uid == 
+        resource.data.toUserId;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && 
+        request.auth.uid == 
+        resource.data.toUserId;
+      allow delete: if request.auth != null && 
+        request.auth.uid == 
+        resource.data.toUserId;
+    }
+    
+    // Chats and Messages
+    match /chats/{chatId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /chats/{chatId}/messages/{messageId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Saved/Wishlist items
+    match /saved/{savedId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Reports - any auth user can create,
+    // admins can read/write all
+    match /reports/{reportId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Announcements - any auth user can read,
+    // only admins can write
+    match /announcements/{announcementId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isAdmin();
+    }
+
+  }
+}

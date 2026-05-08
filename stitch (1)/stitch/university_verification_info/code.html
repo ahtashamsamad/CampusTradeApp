@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>University Verification Info</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1754cf",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                        "surface-dark": "#1a212e",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding if needed for cleaner look */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display antialiased selection:bg-primary selection:text-white">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto border-x border-slate-200 dark:border-slate-800">
+<!-- Header -->
+<div class="flex items-center justify-between p-4 pb-2 bg-background-light dark:bg-background-dark sticky top-0 z-10">
+<button class="text-slate-900 dark:text-white flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<button class="flex h-10 px-4 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-bold leading-normal tracking-wide">Skip</p>
+</button>
+</div>
+<!-- Main Content Scroll Area -->
+<div class="flex-1 flex flex-col px-4 py-2 pb-32"> <!-- pb-32 to allow space for fixed footer -->
+<!-- Hero Section -->
+<div class="flex flex-col items-center gap-6 mt-2 mb-8">
+<!-- Hero Image -->
+<div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-surface-dark/50 flex items-center justify-center">
+<!-- Placeholder for illustration -->
+<div class="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent"></div>
+<div class="bg-center bg-no-repeat bg-contain w-3/4 h-3/4 z-10" data-alt="Students studying and collaborating on campus" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDDZ76RyaJH7M4qcTwBeZVAgx3i7I9JRaq6lZVlzkmMR-zhy8Q9ZOoxQFCT0KNe3pK1HNEck7dEKYfsQZXq9ieyJI376W8fMGizugUa3pR_FmQ_yRBCQ1EvrTTo6In_YPd7fMXDNa1Dfh111PgPYhNX8P2B_hq43wYL4jAETxYvdDyVPLkNRbhC_4uGwTHFsA_M8P7p29O1ScHxImsnay5JnXLaleUt-Bfzm-SGuADIYgE49G22jyLZnZrnMEeBzSovx4TlMmiemkcz");'></div>
+</div>
+<!-- Text Content -->
+<div class="flex flex-col items-center gap-3 text-center">
+<h1 class="text-slate-900 dark:text-white text-2xl font-bold leading-tight tracking-tight">
+                        Keep our campus safe
+                    </h1>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-relaxed max-w-[320px]">
+                        To ensure a secure trading environment, we require all users to verify their student status.
+                    </p>
+</div>
+</div>
+<!-- Benefits List -->
+<div class="flex flex-col gap-1">
+<!-- Item 1 -->
+<div class="flex gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark/40 border border-slate-200 dark:border-slate-800/60">
+<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">verified_user</span>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-sm font-semibold leading-normal">Verified Students Only</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">Connect with real students on your campus.</p>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark/40 border border-slate-200 dark:border-slate-800/60">
+<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">location_on</span>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-sm font-semibold leading-normal">Safe Meetups</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">Trade safely in familiar campus locations.</p>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark/40 border border-slate-200 dark:border-slate-800/60">
+<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">gpp_good</span>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-sm font-semibold leading-normal">No Scams</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">A trusted community with verified identities.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Fixed Bottom Section -->
+<div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-background-light dark:bg-background-dark/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-4 pb-8 z-20">
+<form class="flex flex-col gap-4" onsubmit="event.preventDefault()">
+<label class="flex flex-col gap-2">
+<span class="text-slate-900 dark:text-white text-sm font-medium ml-1">University Email</span>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">mail</span>
+</div>
+<input class="w-full rounded-xl bg-white dark:bg-surface-dark border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-primary h-12 pl-10 pr-4 text-base transition-colors" placeholder="yourname@university.edu" type="email"/>
+</div>
+</label>
+<button class="flex w-full items-center justify-center overflow-hidden rounded-xl h-12 px-5 bg-primary hover:bg-primary/90 active:bg-primary/80 transition-colors text-white text-base font-bold leading-normal tracking-wide shadow-lg shadow-primary/20" type="submit">
+                    Send Verification Link
+                </button>
+<div class="flex justify-center">
+<a class="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-primary dark:hover:text-primary transition-colors" href="#">
+                        I don't have a .edu email
+                    </a>
+</div>
+</form>
+</div>
+</div>
+</body></html>
