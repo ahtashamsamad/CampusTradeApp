@@ -1,0 +1,79 @@
+{
+  "expo": {
+    "name": "Campus Trade",
+    "slug": "campus-trade-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "frontend",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.campustrade.app"
+    },
+    "android": {
+      "package": "com.campustrade.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ],
+      "useNextNotificationsApi": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow CampusTradeApp to access your photos to upload listing images.",
+          "cameraPermission": "Allow CampusTradeApp to use your camera to take listing photos."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4F46E5",
+          "androidMode": "default",
+          "androidCollapsedTitle": "%(unread_notifications)s new messages"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9b32f083-3aa7-4090-b3bd-ccd6e0d03a9e"
+      }
+    }
+  }
+}
