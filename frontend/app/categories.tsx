@@ -77,7 +77,7 @@ export default function CategoriesScreen() {
                 return {
                     id: doc.id,
                     ...docData
-                };
+                } as any;
             });
 
             if (data.length > 0) {

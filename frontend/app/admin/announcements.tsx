@@ -87,15 +87,8 @@ export default function AdminAnnouncements() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
             <StatusBar barStyle={colors.statusBarStyle} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface }}>
-                <TouchableOpacity onPress={() => router.back()} style={{ width: 40, alignItems: 'flex-start' }}>
-                    <MaterialIcons name="arrow-back" size={24} color={colors.textPrimary} />
-                </TouchableOpacity>
-                <Text style={{ flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>Announcements</Text>
-                <View style={{ width: 40 }} />
-            </View>
 
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
                 <View style={{ backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 24 }}>

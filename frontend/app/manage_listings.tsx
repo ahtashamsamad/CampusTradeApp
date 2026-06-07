@@ -125,7 +125,7 @@ export default function ManageListingsScreen() {
                     </View>
                 ) : !listings || listings.length === 0 ? (
                     <View className="flex-1 items-center justify-center py-20">
-                        <MaterialIcons name="inventory-2" size={48} color="#334155" />
+                        <MaterialIcons name="inventory" size={48} color="#334155" />
                         <Text className="text-text-secondary mt-4 text-center">You {"don't"} have any listings yet.</Text>
                         <TouchableOpacity
                             className="mt-6 bg-primary px-6 py-2 rounded-lg"

@@ -31,6 +31,8 @@ const typeConfig: Record<NotificationItem['type'], { icon: string; bg: string; c
     sale: { icon: 'sell', bg: '#065f46', color: '#6ee7b7' },
     price: { icon: 'trending-down', bg: '#7c3aed', color: '#c4b5fd' },
     system: { icon: 'info', bg: '#374151', color: '#9ca3af' },
+    listing: { icon: 'shopping-bag', bg: '#0891b2', color: '#a5f3fc' },
+    offer: { icon: 'local-offer', bg: '#ca8a04', color: '#fef08a' },
 };
 
 export default function NotificationsScreen() {

@@ -1,97 +1,317 @@
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+  RefreshControl,
+  SafeAreaView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { adminFetch } from '@/src/utils/adminApi';
 import { MaterialIcons } from '@expo/vector-icons';
-import { db } from '@/src/config/firebase';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+
+type DashboardStats = {
+  totalUsers: number;
+  totalListings: number;
+  pendingApprovals: number;
+  activeReports: number;
+};
+
+type ActivityItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  date: string | null;
+  type: string;
+};
 
 export default function AdminDashboard() {
-    const router = useRouter();
-    const { colors } = useTheme();
-    const [stats, setStats] = useState({
-        totalUsers: 0,
-        totalListings: 0,
-        activeListings: 0,
-        pendingReports: 0,
-    });
+  const { colors } = useTheme();
+  const { getIdToken } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    totalListings: 0,
+    pendingApprovals: 0,
+    activeReports: 0,
+  });
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    useEffect(() => {
-        const unsubUsers = onSnapshot(collection(db, 'users'), snap => {
-            setStats(p => ({ ...p, totalUsers: snap.size }));
-        });
-        const unsubListings = onSnapshot(collection(db, 'listings'), snap => {
-            setStats(p => ({ ...p, totalListings: snap.size }));
-        });
-        const unsubActive = onSnapshot(query(collection(db, 'listings'), where('isAvailable', '==', true)), snap => {
-            setStats(p => ({ ...p, activeListings: snap.size }));
-        });
-        const unsubReports = onSnapshot(query(collection(db, 'reports'), where('status', '==', 'pending')), snap => {
-            setStats(p => ({ ...p, pendingReports: snap.size }));
-        });
+  const fetchDashboard = async () => {
+    try {
+      setErrorMessage(null);
+      const token = await getIdToken();
+      if (!token) throw new Error('Admin authentication token missing');
 
-        return () => {
-            unsubUsers();
-            unsubListings();
-            unsubActive();
-            unsubReports();
-        };
-    }, []);
+      const [statsResponse, activityResponse] = await Promise.all([
+        adminFetch<DashboardStats>('/admin/stats', token),
+        adminFetch<{ activity: ActivityItem[] }>('/admin/activity', token),
+      ]);
 
+      setStats(statsResponse);
+      setActivity(activityResponse.activity || []);
+    } catch (error: any) {
+      console.error('Admin dashboard load error:', error);
+      setErrorMessage(error?.message || 'Unable to load admin dashboard.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchDashboard();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    void fetchDashboard();
+  };
+
+  const navigateToScreen = (route: string) => {
+    router.push(`/admin/${route}` as any);
+  };
+
+  if (loading) {
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
-            <StatusBar barStyle={colors.statusBarStyle} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface }}>
-                <TouchableOpacity onPress={() => router.back()} style={{ width: 40, alignItems: 'flex-start' }}>
-                    <MaterialIcons name="arrow-back" size={24} color={colors.textPrimary} />
-                </TouchableOpacity>
-                <Text style={{ flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>Admin Panel</Text>
-                <View style={{ width: 40 }} />
-            </View>
-
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-                <Text style={{ fontSize: 24, fontWeight: '800', color: colors.textPrimary, marginBottom: 20 }}>Overview</Text>
-
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
-                    {[
-                        { label: 'Total Users', value: stats.totalUsers, icon: 'people', color: '#3b82f6' },
-                        { label: 'Total Listings', value: stats.totalListings, icon: 'storefront', color: '#8b5cf6' },
-                        { label: 'Active Listings', value: stats.activeListings, icon: 'check-circle', color: '#10b981' },
-                        { label: 'Pending Reports', value: stats.pendingReports, icon: 'warning', color: '#f59e0b' },
-                    ].map((s, i) => (
-                        <View key={i} style={{ width: '48%', backgroundColor: colors.surface, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: colors.border }}>
-                            <MaterialIcons name={s.icon as any} size={24} color={s.color} style={{ marginBottom: 8 }} />
-                            <Text style={{ fontSize: 24, fontWeight: '800', color: colors.textPrimary }}>{s.value}</Text>
-                            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>{s.label}</Text>
-                        </View>
-                    ))}
-                </View>
-
-                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, marginLeft: 4 }}>Management</Text>
-                <View style={{ backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' }}>
-                    {[
-                        { title: 'Manage Users', icon: 'manage-accounts', color: '#3b82f6', route: '/admin/users' },
-                        { title: 'Manage Listings', icon: 'inventory', color: '#8b5cf6', route: '/admin/listings' },
-                        { title: 'View Reports', icon: 'gavel', color: '#ef4444', route: '/admin/reports' },
-                        { title: 'Send Announcement', icon: 'campaign', color: '#10b981', route: '/admin/announcements' },
-                    ].map((item, i, arr) => (
-                        <TouchableOpacity
-                            key={i}
-                            onPress={() => router.push(item.route as any)}
-                            style={{
-                                flexDirection: 'row', alignItems: 'center', padding: 16,
-                                borderBottomWidth: i === arr.length - 1 ? 0 : 1, borderBottomColor: colors.border,
-                            }}
-                        >
-                            <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: item.color + '20', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-                                <MaterialIcons name={item.icon as any} size={20} color={item.color} />
-                            </View>
-                            <Text style={{ flex: 1, fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>{item.title}</Text>
-                            <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </ScrollView>
-        </SafeAreaView>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading dashboard...</Text>
+        </View>
+      </SafeAreaView>
     );
+  }
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+      <ScrollView
+        style={styles.scroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
+        <View style={styles.content}>
+          <Text style={[styles.header, { color: colors.textPrimary }]}>Admin Dashboard</Text>
+          <Text style={[styles.subHeader, { color: colors.textSecondary }]}>Manage users, listings, reports, and verifications from one place.</Text>
+
+          <View style={styles.metricsContainer}>
+            <TouchableOpacity style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigateToScreen('users')}>
+              <View style={[styles.iconCircle, { backgroundColor: '#3b82f6' }]}>
+                <MaterialIcons name="people" size={26} color="#fff" />
+              </View>
+              <Text style={[styles.metricValue, { color: colors.textPrimary }]}>{stats.totalUsers}</Text>
+              <Text style={[styles.metricTitle, { color: colors.textSecondary }]}>Total Users</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigateToScreen('listings')}>
+              <View style={[styles.iconCircle, { backgroundColor: '#10b981' }]}>
+                <MaterialIcons name="shopping-bag" size={26} color="#fff" />
+              </View>
+              <Text style={[styles.metricValue, { color: colors.textPrimary }]}>{stats.totalListings}</Text>
+              <Text style={[styles.metricTitle, { color: colors.textSecondary }]}>Total Listings</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigateToScreen('approvals')}>
+              <View style={[styles.iconCircle, { backgroundColor: '#f59e0b' }]}>
+                <MaterialIcons name="pending-actions" size={26} color="#fff" />
+              </View>
+              <Text style={[styles.metricValue, { color: colors.textPrimary }]}>{stats.pendingApprovals}</Text>
+              <Text style={[styles.metricTitle, { color: colors.textSecondary }]}>Pending Approvals</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigateToScreen('reports')}>
+              <View style={[styles.iconCircle, { backgroundColor: '#ef4444' }]}>
+                <MaterialIcons name="flag" size={26} color="#fff" />
+              </View>
+              <Text style={[styles.metricValue, { color: colors.textPrimary }]}>{stats.activeReports}</Text>
+              <Text style={[styles.metricTitle, { color: colors.textSecondary }]}>Active Reports</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
+          </View>
+
+          <View style={styles.quickActionsContainer}>
+            <TouchableOpacity style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigateToScreen('approvals')}>
+              <MaterialIcons name="pending-actions" size={20} color={colors.primary} />
+              <Text style={[styles.actionText, { color: colors.textPrimary }]}>Review Pending Items</Text>
+              <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigateToScreen('reports')}>
+              <MaterialIcons name="flag" size={20} color={colors.primary} />
+              <Text style={[styles.actionText, { color: colors.textPrimary }]}>View Reports</Text>
+              <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigateToScreen('verifications')}>
+              <MaterialIcons name="verified-user" size={20} color={colors.primary} />
+              <Text style={[styles.actionText, { color: colors.textPrimary }]}>Verify Students</Text>
+              <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
+          </View>
+
+          {errorMessage ? (
+            <View style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{errorMessage}</Text>
+            </View>
+          ) : activity.length === 0 ? (
+            <View style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No recent admin activity available.</Text>
+            </View>
+          ) : (
+            activity.map((item) => (
+              <View key={item.id} style={[styles.activityCard, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
+                <View style={styles.activityRow}>
+                  <MaterialIcons name={item.type === 'report' ? 'flag' : 'history'} size={18} color={colors.primary} />
+                  <Text style={[styles.activityTitle, { color: colors.textPrimary }]}>{item.title}</Text>
+                </View>
+                <Text style={[styles.activitySubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
+                <Text style={[styles.activityDate, { color: colors.textMuted }]}>{item.date ? new Date(item.date).toLocaleString() : 'Unknown date'}</Text>
+              </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  subHeader: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  metricsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 28,
+  },
+  metricCard: {
+    width: '48%',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  metricValue: {
+    fontSize: 26,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  metricTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  sectionHeader: {
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  quickActionsContainer: {
+    marginBottom: 24,
+  },
+  actionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  actionText: {
+    flex: 1,
+    marginHorizontal: 10,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  activityCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 12,
+  },
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  activityTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  activitySubtitle: {
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  activityDate: {
+    fontSize: 12,
+  },
+  loadingText: {
+    marginTop: 14,
+    fontSize: 15,
+  },
+  emptyState: {
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  emptyText: {
+    fontSize: 14,
+  },
+});

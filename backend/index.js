@@ -19,6 +19,7 @@ app.use('/api/listings', require('./routes/listings'));
 app.use('/api/verify', require('./routes/verification'));
 app.use('/api/messaging', require('./routes/messaging'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/admin', require('./routes/admin'));
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT} and listening on 0.0.0.0`);

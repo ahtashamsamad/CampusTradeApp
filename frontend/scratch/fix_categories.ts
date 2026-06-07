@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { db } from './src/config/firebase';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 

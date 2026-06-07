@@ -471,15 +471,15 @@ export default function ChatRoomScreen() {
                     backgroundColor: colors.surface,
                     borderTopWidth: 1, borderTopColor: colors.border,
                 }}>
-                    <TouchableOpacity style={{ padding: 8, marginBottom: 2 }}>
+                    <TouchableOpacity style={{ padding: 8, marginBottom: 2, backgroundColor: colors.surface, borderRadius: 22, borderWidth: 1, borderColor: colors.border }}>
                         <MaterialIcons name="add-circle-outline" size={24} color={colors.textSecondary} />
                     </TouchableOpacity>
 
                     <TextInput
                         style={{
                             flex: 1, minHeight: 44, maxHeight: 120,
-                            backgroundColor: colors.inputBg,
-                            borderWidth: 1.5, borderColor: isSending ? colors.border : colors.primary + '40',
+                            backgroundColor: colors.surface,
+                            borderWidth: 1.5, borderColor: isSending ? colors.primary : colors.border,
                             borderRadius: 22, paddingHorizontal: 16,
                             paddingVertical: 10, fontSize: 14, color: colors.textPrimary,
                         }}
@@ -500,6 +500,11 @@ export default function ChatRoomScreen() {
                                 backgroundColor: isSending ? colors.primary + '80' : colors.primary,
                                 alignItems: 'center', justifyContent: 'center',
                                 marginBottom: 2,
+                                shadowColor: colors.primary,
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.25,
+                                shadowRadius: 4,
+                                elevation: 4,
                             }}
                         >
                             {isSending

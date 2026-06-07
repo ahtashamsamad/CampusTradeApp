@@ -189,6 +189,24 @@ export default function MarketplaceHome() {
         </View>
       </View>
 
+      {/* Verified Notice Bar */}
+      <View style={{
+        backgroundColor: resolvedTheme === 'dark' ? '#06A77D20' : '#06A77D10',
+        paddingVertical: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#06A77D30',
+        gap: 6,
+      }}>
+        <MaterialIcons name="verified" size={14} color="#06A77D" />
+        <Text style={{ fontSize: 12, fontWeight: '700', color: '#06A77D', letterSpacing: 0.3 }}>
+          All sellers are verified BZU students
+        </Text>
+      </View>
+
+
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 100 }}

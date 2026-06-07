@@ -1,161 +1,375 @@
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar, TextInput, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  TextInput,
+  Alert,
+  RefreshControl,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { adminFetch } from '@/src/utils/adminApi';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { db } from '@/src/config/firebase';
-import { collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
+
+type AdminListing = {
+  id: string;
+  title: string;
+  category?: string;
+  condition?: string;
+  price?: number;
+  isSold?: boolean;
+  sellerName?: string;
+  sellerId?: string;
+  images?: string[];
+  createdAt?: string;
+};
 
 export default function AdminListings() {
-    const router = useRouter();
-    const { colors } = useTheme();
-    const [listings, setListings] = useState<any[]>([]);
-    const [search, setSearch] = useState('');
-    const [filter, setFilter] = useState<'all' | 'active' | 'sold'>('all');
+  const { colors } = useTheme();
+  const { getIdToken } = useAuth();
+  const [listings, setListings] = useState<AdminListing[]>([]);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'active' | 'sold'>('all');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const unsub = onSnapshot(collection(db, 'listings'), (snap) => {
-            const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            // Sort by newest
-            arr.sort((a: any, b: any) => {
-                const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-                const db2 = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-                return db2.getTime() - da.getTime();
-            });
-            setListings(arr);
-        });
-        return () => unsub();
-    }, []);
+  const fetchListings = async () => {
+    try {
+      setError(null);
+      const token = await getIdToken();
+      if (!token) throw new Error('Authentication required');
+      const response = await adminFetch<{ listings: AdminListing[] }>('/admin/listings', token);
+      setListings(response.listings || []);
+    } catch (err: any) {
+      console.error('Failed to load listings', err);
+      setError(err.message || 'Unable to load listings');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
-    const filtered = listings.filter(l => {
-        // Tab filtering
-        if (filter === 'active' && l.isSold) return false;
-        if (filter === 'sold' && !l.isSold) return false;
+  useEffect(() => {
+    void fetchListings();
+  }, []);
 
-        // Search filtering
-        if (!search) return true;
-        const s = search.toLowerCase();
-        return (
-            l.title?.toLowerCase().includes(s) || 
-            l.category?.toLowerCase().includes(s) || 
-            l.sellerId?.toLowerCase().includes(s) // Fallback since we removed async name fetch
-        );
-    });
-
-    const handleMarkSold = (listing: any) => {
-        Alert.alert(
-            'Mark as Sold',
-            `Mark "${listing.title}" as sold?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Mark Sold',
-                    onPress: async () => {
-                        try {
-                            await updateDoc(doc(db, 'listings', listing.id), { isAvailable: false, isSold: true });
-                        } catch (e) {
-                            Alert.alert('Error', 'Failed to update listing');
-                        }
-                    }
-                }
-            ]
-        );
-    };
-
-    const handleDelete = (listing: any) => {
-        Alert.alert(
-            'Delete Listing',
-            `Delete "${listing.title}"? This cannot be undone.`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await deleteDoc(doc(db, 'listings', listing.id));
-                        } catch (e) {
-                            Alert.alert('Error', 'Failed to delete listing');
-                        }
-                    }
-                }
-            ]
-        );
-    };
-
+  const filteredListings = listings.filter((listing) => {
+    if (filter === 'active' && listing.isSold) return false;
+    if (filter === 'sold' && !listing.isSold) return false;
+    if (!search.trim()) return true;
+    const query = search.toLowerCase();
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
-            <StatusBar barStyle={colors.statusBarStyle} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface }}>
-                <TouchableOpacity onPress={() => router.back()} style={{ width: 40, alignItems: 'flex-start' }}>
-                    <MaterialIcons name="arrow-back" size={24} color={colors.textPrimary} />
-                </TouchableOpacity>
-                <Text style={{ flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>Manage Listings</Text>
-                <View style={{ width: 40 }} />
-            </View>
-
-            <View style={{ padding: 16, paddingBottom: 8 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, height: 44, marginBottom: 12 }}>
-                    <MaterialIcons name="search" size={20} color={colors.textSecondary} />
-                    <TextInput
-                        value={search}
-                        onChangeText={setSearch}
-                        placeholder="Search title, category, or seller..."
-                        placeholderTextColor={colors.textSecondary}
-                        style={{ flex: 1, color: colors.textPrimary, marginLeft: 8, fontSize: 15 }}
-                    />
-                    {search ? <TouchableOpacity onPress={() => setSearch('')}><MaterialIcons name="close" size={20} color={colors.textSecondary} /></TouchableOpacity> : null}
-                </View>
-
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                    {(['all', 'active', 'sold'] as const).map(f => (
-                        <TouchableOpacity
-                            key={f}
-                            onPress={() => setFilter(f)}
-                            style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: filter === f ? colors.primary : colors.surfaceHighlight, borderWidth: filter === f ? 0 : 1, borderColor: colors.border }}
-                        >
-                            <Text style={{ color: filter === f ? '#fff' : colors.textPrimary, fontSize: 13, fontWeight: '600', textTransform: 'capitalize' }}>{f}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-                <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 12 }}>Showing {filtered.length} listings</Text>
-            </View>
-
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingTop: 8, paddingBottom: 40 }}>
-                {filtered.map(listing => {
-                    const img = listing.images?.[0] || listing.imageUrl;
-                    return (
-                        <View key={listing.id} style={{ backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 12, marginBottom: 12, flexDirection: 'row', gap: 12 }}>
-                            <Image source={{ uri: img }} style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: colors.surfaceHighlight }} />
-                            <View style={{ flex: 1 }}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary, flex: 1 }} numberOfLines={1}>{listing.title}</Text>
-                                    <Text style={{ fontSize: 15, fontWeight: '800', color: colors.primary, marginLeft: 8 }}>Rs {listing.price}</Text>
-                                </View>
-                                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>{listing.category} • {listing.condition}</Text>
-                                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>Seller ID: {listing.sellerId?.slice(0, 8)}...</Text>
-                                
-                                <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                                    {!listing.isSold && (
-                                        <TouchableOpacity onPress={() => handleMarkSold(listing)} style={{ backgroundColor: '#10b98120', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 }}>
-                                            <Text style={{ color: '#10b981', fontSize: 12, fontWeight: '700' }}>Mark Sold</Text>
-                                        </TouchableOpacity>
-                                    )}
-                                    {listing.isSold && (
-                                        <View style={{ backgroundColor: colors.surfaceHighlight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 }}>
-                                            <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '700' }}>Sold</Text>
-                                        </View>
-                                    )}
-                                    <TouchableOpacity onPress={() => handleDelete(listing)} style={{ backgroundColor: '#ef444420', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 }}>
-                                        <Text style={{ color: '#ef4444', fontSize: 12, fontWeight: '700' }}>Delete</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </View>
-                    );
-                })}
-            </ScrollView>
-        </SafeAreaView>
+      listing.title?.toLowerCase().includes(query) ||
+      listing.category?.toLowerCase().includes(query) ||
+      listing.sellerName?.toLowerCase().includes(query) ||
+      listing.sellerId?.toLowerCase().includes(query)
     );
+  });
+
+  const updateListingStatus = async (id: string, action: 'sold' | 'delete') => {
+    try {
+      const token = await getIdToken();
+      if (!token) throw new Error('Authentication required');
+      await adminFetch(`/admin/listings/${id}/action`, token, {
+        method: 'POST',
+        body: JSON.stringify({ action }),
+      });
+      void fetchListings();
+    } catch (err: any) {
+      Alert.alert('Action failed', err.message || 'Unable to update listing');
+    }
+  };
+
+  const confirmListingAction = (listing: AdminListing, action: 'sold' | 'delete') => {
+    const actionLabel = action === 'sold' ? 'Mark as sold' : 'Delete listing';
+    const description =
+      action === 'sold'
+        ? `Mark "${listing.title}" as sold?`
+        : `Delete "${listing.title}"? This cannot be undone.`;
+
+    Alert.alert(actionLabel, description, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: action === 'sold' ? 'Mark Sold' : 'Delete',
+        style: action === 'delete' ? 'destructive' : 'default',
+        onPress: () => void updateListingStatus(listing.id, action),
+      },
+    ]);
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+      <StatusBar barStyle={colors.statusBarStyle} />
+
+      <View style={[styles.header, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
+        <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
+          <MaterialIcons name="search" size={20} color={colors.textSecondary} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search title, category, or seller..."
+            placeholderTextColor={colors.textSecondary}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
+          />
+          {search ? (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <MaterialIcons name="close" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        <View style={styles.filterBar}>
+          {(['all', 'active', 'sold'] as const).map((f) => (
+            <TouchableOpacity
+              key={f}
+              onPress={() => setFilter(f)}
+              style={[
+                styles.filterButton,
+                { backgroundColor: filter === f ? colors.primary : colors.surfaceHighlight, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.filterText, { color: filter === f ? '#fff' : colors.textPrimary }]}>{f}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <Text style={[styles.countText, { color: colors.textSecondary }]}>Showing {filteredListings.length} listings</Text>
+      </View>
+
+      {error ? (
+        <View style={[styles.errorBox, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
+          <Text style={[styles.errorText, { color: colors.textPrimary }]}>{error}</Text>
+        </View>
+      ) : null}
+
+      <ScrollView
+        style={styles.listContainer}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void fetchListings(); }} colors={[colors.primary]} />
+        }
+      >
+        {filteredListings.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <MaterialIcons name="inventory" size={48} color={colors.textSecondary} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No listings match your filter.</Text>
+          </View>
+        ) : (
+          filteredListings.map((listing) => {
+            const imageUri = listing.images?.[0] || undefined;
+            return (
+              <View key={listing.id} style={[styles.listingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
+                  {imageUri ? (
+                    <Image
+                      source={{ uri: imageUri }}
+                      style={styles.listingImage}
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <View style={[styles.imagePlaceholder, { backgroundColor: colors.surfaceHighlight }]}> 
+                      <MaterialIcons name="image-not-supported" size={32} color={colors.textSecondary} />
+                    </View>
+                  )}
+                <View style={styles.listingInfo}>
+                  <View style={styles.listingHeader}>
+                    <Text style={[styles.listingTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                      {listing.title}
+                    </Text>
+                    <Text style={[styles.listingPrice, { color: colors.primary }]}>Rs {listing.price ?? 'N/A'}</Text>
+                  </View>
+                  <Text style={[styles.listingMeta, { color: colors.textSecondary }]}>{listing.category || 'No category'} • {listing.condition || 'Unknown'}</Text>
+                  <Text style={[styles.listingMeta, { color: colors.textSecondary }]}>Seller: {listing.sellerName || listing.sellerId || 'Unknown'}</Text>
+                  <View style={styles.buttonRow}>
+                    {!listing.isSold ? (
+                      <TouchableOpacity style={styles.actionButtonSold} onPress={() => confirmListingAction(listing, 'sold')}>
+                        <Text style={styles.actionButtonText}>Mark Sold</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={[styles.statusTag, { backgroundColor: colors.surfaceHighlight }]}> 
+                        <Text style={[styles.statusTagText, { color: colors.textSecondary }]}>Sold</Text>
+                      </View>
+                    )}
+                    <TouchableOpacity style={styles.actionButtonDelete} onPress={() => confirmListingAction(listing, 'delete')}>
+                      <Text style={styles.actionButtonTextDelete}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            );
+          })
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    padding: 16,
+    paddingBottom: 10,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    height: 44,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 15,
+  },
+  filterBar: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 8,
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  filterText: {
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  countText: {
+    marginTop: 12,
+    fontSize: 13,
+  },
+  errorBox: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  errorText: {
+    fontSize: 13,
+  },
+  listContainer: {
+    flex: 1,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  listingCard: {
+    flexDirection: 'row',
+    gap: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 14,
+  },
+  listingImage: {
+    width: 96,
+    height: 96,
+    borderRadius: 16,
+    backgroundColor: '#1f2937',
+  },
+  imagePlaceholder: {
+    width: 96,
+    height: 96,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  listingInfo: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  listingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  listingTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    flex: 1,
+  },
+  listingPrice: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  listingMeta: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+    flexWrap: 'wrap',
+  },
+  actionButtonSold: {
+    backgroundColor: '#10b98120',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  actionButtonDelete: {
+    backgroundColor: '#ef444420',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  actionButtonText: {
+    color: '#10b981',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  actionButtonTextDelete: {
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  statusTag: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  statusTagText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyText: {
+    fontSize: 14,
+    marginTop: 10,
+  },
+});

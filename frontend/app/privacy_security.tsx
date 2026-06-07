@@ -188,7 +188,7 @@ export default function PrivacySecurityScreen() {
                     >
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                             <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(192,132,252,0.15)', alignItems: 'center', justifyContent: 'center' }}>
-                                <MaterialIcons name="lock-reset" size={20} color="#c084fc" />
+                                <MaterialIcons name="lock" size={20} color="#c084fc" />
                             </View>
                             <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>Change Password</Text>
                         </View>

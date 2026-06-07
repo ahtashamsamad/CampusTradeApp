@@ -216,6 +216,50 @@ export default function ProfileScreen() {
                         ))}
                     </View>
 
+                    {/* ── BZU Student Info Card ── */}
+                    <View style={{
+                        backgroundColor: '#1B263B',
+                        borderRadius: 10,
+                        padding: 14,
+                        marginBottom: 24,
+                        borderWidth: 1,
+                        borderColor: '#415A77',
+                    }}>
+                        <Text style={{ fontSize: 16, fontWeight: '800', color: 'white', marginBottom: 12 }}>🎓 BZU Student Info</Text>
+                        
+                        {[
+                            { label: 'Roll Number', value: user.rollNumber },
+                            { label: 'Department', value: user.department },
+                            { label: 'Program', value: user.program },
+                            { label: 'Semester', value: user.semester },
+                            { label: 'Session', value: user.session },
+                            { label: 'Campus', value: user.campus },
+                        ].map((item) => (
+                            <View key={item.label} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                                <Text style={{ color: '#E0E1DD', fontSize: 13 }}>{item.label}</Text>
+                                <Text style={{ color: 'white', fontSize: 13, fontWeight: '600' }}>{item.value || 'Not set'}</Text>
+                            </View>
+                        ))}
+
+                        {user.bzu_verified && (
+                            <View style={{
+                                backgroundColor: '#06A77D',
+                                borderRadius: 8,
+                                paddingVertical: 6,
+                                paddingHorizontal: 12,
+                                marginTop: 8,
+                                alignSelf: 'flex-start',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                            }}>
+                                <MaterialIcons name="verified" size={16} color="white" />
+                                <Text style={{ color: 'white', fontSize: 12, fontWeight: '700' }}>Verified BZU Student</Text>
+                            </View>
+                        )}
+                    </View>
+
+
                     {/* ── Bio ── */}
                     {user.bio && user.bio.trim() !== 'CS junior passionate about tech and side projects. Selling stuff I no longer need!' ? (
                         <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: colors.border, marginBottom: 24 }}>

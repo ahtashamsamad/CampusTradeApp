@@ -12,7 +12,61 @@ import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { CLOUDINARY_CONFIG } from '@/src/config/cloudinary';
 
 import { API_BASE_URL } from '@/constants/Config';
-import { CATEGORY_NAMES } from '@/constants/categories';
+const BZU_MEETUP_LOCATIONS = [
+    'Main Library',
+    'CS Department Block',
+    'Engineering Block',
+    'Business Administration Block',
+    'Student Center / Cafeteria',
+    'Main Gate Area',
+    'Boys Hostel Area',
+    'Girls Hostel Area',
+    'Sports Complex',
+    'Examination Hall',
+    'Admin Block',
+    'Pharmacy Block',
+    'Law Department Block',
+];
+
+const BZU_DEPARTMENTS = [
+    'Computer Science', 'Information Technology',
+    'Software Engineering', 'Electrical Engineering',
+    'Mechanical Engineering', 'Civil Engineering',
+    'Business Administration', 'Commerce', 'Economics',
+    'Mathematics', 'Physics', 'Chemistry', 'Biology',
+    'Pharmacy', 'Law', 'Education', 'Islamic Studies',
+    'Urdu', 'English', 'History',
+];
+
+const SEMESTERS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+
+const CATEGORIES = [
+    { id: '1', name: 'BZU Textbooks',  icon: '📚' },
+    { id: '2', name: 'Electronics',    icon: '💻' },
+    { id: '3', name: 'Stationery',     icon: '✏️' },
+    { id: '4', name: 'Lab Equipment',  icon: '🔬' },
+    { id: '5', name: 'Uniforms',       icon: '👔' },
+    { id: '6', name: 'Hostel Items',   icon: '🛏️' },
+    { id: '7', name: 'Sports',         icon: '⚽' },
+    { id: '8', name: 'Other',          icon: '📦' },
+];
+
+const HorizontalSelection = ({ label, options, selected, onSelect, colors }: any) => (
+    <View style={{ marginBottom: 20 }}>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8, marginLeft: 4 }}>{label}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', paddingVertical: 4 }}>
+            {options.map((opt: string) => (
+                <TouchableOpacity
+                    key={opt}
+                    onPress={() => onSelect(opt)}
+                    style={{ marginRight: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, backgroundColor: selected === opt ? colors.primary + '20' : colors.surface, borderColor: selected === opt ? colors.primary : colors.border }}
+                >
+                    <Text style={{ fontSize: 14, fontWeight: '500', color: selected === opt ? colors.primary : colors.textSecondary }}>{opt}</Text>
+                </TouchableOpacity>
+            ))}
+        </ScrollView>
+    </View>
+);
 
 export default function CreateListingScreen() {
     const router = useRouter();
@@ -21,15 +75,18 @@ export default function CreateListingScreen() {
     const [title, setTitle] = useState('');
     const [price, setPrice] = useState('');
     const [description, setDescription] = useState('');
-    const [category, setCategory] = useState(CATEGORY_NAMES[0]);
+    const [category, setCategory] = useState(CATEGORIES[0].name);
     const [condition, setCondition] = useState('Good');
     const [isNegotiable, setIsNegotiable] = useState(false);
-    const [meetupLocation, setMeetupLocation] = useState(user?.preferredMeetupLocation || '');
+    const [meetupLocation, setMeetupLocation] = useState('');
+    const [relevantDepartment, setRelevantDepartment] = useState('');
+    const [relevantCourse, setRelevantCourse] = useState('');
+    const [relevantSemester, setRelevantSemester] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploadStatus, setUploadStatus] = useState('');
     const [images, setImages] = useState<string[]>([]);
 
-    const categories = CATEGORY_NAMES;
+    const categories = CATEGORIES.map(c => c.name);
     const conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 
     const pickImage = async () => {
@@ -41,7 +98,7 @@ export default function CreateListingScreen() {
         }
 
         const result = await launchImageLibraryAsync({
-            mediaTypes: ['images'],
+            mediaTypes: MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [4, 3],
             quality: 0.8, // Slightly lower quality for faster uploads
@@ -71,12 +128,17 @@ export default function CreateListingScreen() {
         setTitle('');
         setPrice('');
         setDescription('');
-        setCategory('Books');
+        setCategory(CATEGORIES[0].name);
         setCondition('Good');
         setIsNegotiable(false);
-        setMeetupLocation(user?.preferredMeetupLocation || '');
+        setMeetupLocation('');
+        setRelevantDepartment('');
+        setRelevantCourse('');
+        setRelevantSemester('');
         setImages([]);
     };
+
+
 
     const uploadImageToCloudinary = async (
       uri: string
@@ -207,36 +269,10 @@ export default function CreateListingScreen() {
                     </View>
 
                     {/* Category Selection */}
-                    <View style={{ marginBottom: 20 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8, marginLeft: 4 }}>Category</Text>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', paddingVertical: 4 }}>
-                            {categories.map((cat) => (
-                                <TouchableOpacity
-                                    key={cat}
-                                    onPress={() => setCategory(cat)}
-                                    style={{ marginRight: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, backgroundColor: category === cat ? colors.primary + '20' : colors.surface, borderColor: category === cat ? colors.primary : colors.border }}
-                                >
-                                    <Text style={{ fontSize: 14, fontWeight: '500', color: category === cat ? colors.primary : colors.textSecondary }}>{cat}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    </View>
+                    <HorizontalSelection label="Category" options={categories} selected={category} onSelect={setCategory} colors={colors} />
 
                     {/* Condition Selection */}
-                    <View style={{ marginBottom: 20 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8, marginLeft: 4 }}>Condition</Text>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', paddingVertical: 4 }}>
-                            {conditions.map((cond) => (
-                                <TouchableOpacity
-                                    key={cond}
-                                    onPress={() => setCondition(cond)}
-                                    style={{ marginRight: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, backgroundColor: condition === cond ? colors.primary + '20' : colors.surface, borderColor: condition === cond ? colors.primary : colors.border }}
-                                >
-                                    <Text style={{ fontSize: 14, fontWeight: '500', color: condition === cond ? colors.primary : colors.textSecondary }}>{cond}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    </View>
+                    <HorizontalSelection label="Condition" options={conditions} selected={condition} onSelect={setCondition} colors={colors} />
 
                     {/* Description */}
                     <View style={{ marginBottom: 24 }}>
@@ -252,23 +288,24 @@ export default function CreateListingScreen() {
                         />
                     </View>
 
-                    {/* Meetup Location */}
-                    <View style={{ marginBottom: 32 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8, marginLeft: 4 }}>Meetup Location</Text>
-                        <View style={{ position: 'relative', justifyContent: 'center' }}>
-                            <MaterialIcons name="location-on" size={18} color={colors.primary} style={{ position: 'absolute', left: 14, zIndex: 10 }} />
-                            <TextInput
-                                style={{ width: '100%', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingLeft: 40, paddingRight: 16, paddingVertical: 12, color: colors.textPrimary }}
-                                placeholder="E.g. Library, Student Center 2nd Floor"
-                                placeholderTextColor={colors.textSecondary}
-                                value={meetupLocation}
-                                onChangeText={setMeetupLocation}
-                            />
-                        </View>
-                        <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 8, marginLeft: 4 }}>
-                            Suggested meeting place for a safe exchange.
-                        </Text>
+                    {/* BZU Specific Fields */}
+                    <HorizontalSelection label="📍 Meet-up Location on BZU Campus" options={BZU_MEETUP_LOCATIONS} selected={meetupLocation} onSelect={setMeetupLocation} colors={colors} />
+                    
+                    <HorizontalSelection label="🎓 Relevant Department (optional)" options={BZU_DEPARTMENTS} selected={relevantDepartment} onSelect={setRelevantDepartment} colors={colors} />
+
+                    <View style={{ marginBottom: 20 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8, marginLeft: 4 }}>📖 Relevant Course Code (optional)</Text>
+                        <TextInput
+                            style={{ width: '100%', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, color: colors.textPrimary }}
+                            placeholder="e.g. CS-301, PHY-101, MGT-201"
+                            placeholderTextColor={colors.textSecondary}
+                            value={relevantCourse}
+                            onChangeText={setRelevantCourse}
+                        />
                     </View>
+
+                    <HorizontalSelection label="📅 Relevant Semester (optional)" options={SEMESTERS} selected={relevantSemester} onSelect={setRelevantSemester} colors={colors} />
+
 
                     {/* Submit Button */}
                     {isSubmitting && (
@@ -314,11 +351,20 @@ export default function CreateListingScreen() {
                                     condition,
                                     isNegotiable,
                                     meetupLocation,
+                                    relevantDepartment: relevantDepartment || null,
+                                    relevantCourse: relevantCourse || null,
+                                    relevantSemester: relevantSemester || null,
                                     imageUrl,
                                     images: uploadedUrls,
-                                    status: 'active',
+                                    status: 'pending',
                                     userId: user?.id || 'anonymous',
+                                    sellerId: user?.id || 'anonymous',
+                                    sellerName: user?.fullName || user?.displayName || 'BZU Student',
+                                    sellerRollNumber: user?.rollNumber || null,
+                                    sellerDepartment: user?.department || null,
+                                    sellerCampus: user?.campus || null,
                                     createdAt: serverTimestamp(),
+                                    postedAt: serverTimestamp(),
                                 });
 
                                 Alert.alert("Success", "Your listing is now live! 🚀", [

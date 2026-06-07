@@ -18,15 +18,17 @@ export default function ListingDetailsScreen() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
     const { colors, resolvedTheme } = useTheme();
-    const { user, toggleSavedItem } = useAuth();
+    const { user, isLoading: authLoading, toggleSavedItem } = useAuth();
     
     const [listing, setListing] = useState<any>(null);
     const [seller, setSeller] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isChatLoading, setIsChatLoading] = useState(false);
     const [sellerImageLoading, setSellerImageLoading] = useState(true);
 
     const isSaved = user?.savedItems?.includes(id as string) || false;
+    const chatButtonDisabled = authLoading || isChatLoading || !user || !listing || !(listing?.sellerId || listing?.userId);
 
     useEffect(() => {
         if (id) fetchListingDetails();
@@ -96,15 +98,32 @@ export default function ListingDetailsScreen() {
     };
 
     const handleMessageSeller = async () => {
-        if (!user || !listing) {
+        if (authLoading) {
+            Alert.alert('Please wait', 'Checking your account status.');
+            return;
+        }
+
+        if (!user || !user.id) {
             Alert.alert("Authentication", "Please log in to message the seller.");
+            return;
+        }
+
+        if (!listing) {
+            Alert.alert('Please wait', 'Listing data is still loading.');
             return;
         }
 
         const sellerId = listing.sellerId || listing.userId;
 
         if (!sellerId) {
+            console.warn('Unable to message seller: missing sellerId', { listingId: listing?.id, sellerId });
             Alert.alert("Error", "Seller information is unavailable for this listing.");
+            return;
+        }
+
+        if (!listing.id) {
+            console.warn('Unable to message seller: missing listing.id', { listing });
+            Alert.alert('Error', 'Listing identifier is unavailable.');
             return;
         }
 
@@ -114,7 +133,7 @@ export default function ListingDetailsScreen() {
         }
 
         try {
-            setLoading(true);
+            setIsChatLoading(true);
 
             // 1. Check if a chat already exists for this specific listing between these two users
             const chatsRef = collection(db, 'chats');
@@ -130,7 +149,7 @@ export default function ListingDetailsScreen() {
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 if (
-                    data.participantIds.includes(sellerId) &&
+                    data.participantIds?.includes(sellerId) &&
                     data.listingId === listing.id
                 ) {
                     existingChatId = doc.id;
@@ -178,7 +197,7 @@ export default function ListingDetailsScreen() {
             console.error("Error creating/finding chat:", error?.message || error);
             Alert.alert("Message Error", "Could not start conversation. Please try again.");
         } finally {
-            setLoading(false);
+            setIsChatLoading(false);
         }
     };
 
@@ -372,46 +391,89 @@ export default function ListingDetailsScreen() {
                         <Text style={{ fontSize: 16, fontWeight: '800', color: colors.textPrimary, marginBottom: 10 }}>
                             Seller
                         </Text>
-                        <TouchableOpacity
-                            onPress={() => router.push(`/user/${listing.sellerId}` as any)}
+                        <View
                             style={{
-                                flexDirection: 'row', alignItems: 'center', padding: 14,
+                                padding: 14,
                                 backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border,
                             }}
                         >
-                            <View style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12, overflow: 'hidden', backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }}>
-                                {sellerImageLoading && (
-                                    <ActivityIndicator size="small" color={colors.primary} style={{ position: 'absolute', zIndex: 1 }} />
-                                )}
-                                    <Image
-                                    source={{ uri: seller?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(seller?.name || 'S')}&background=random` }}
-                                    style={{ width: '100%', height: '100%' }}
-                                    onLoadStart={() => setSellerImageLoading(true)}
-                                    onLoadEnd={() => setSellerImageLoading(false)}
-                                />
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
-                                    {seller?.name || seller?.displayName || 'Campus Student'}
-                                </Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 3, gap: 4 }}>
-                                    <MaterialIcons name="storefront" size={14} color={colors.textSecondary} />
-                                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>
-                                        {seller?.totalSales || 0} items sold
-                                    </Text>
-                                    {(seller?.isVerified || seller?.verified) && (
-                                        <View style={{
-                                            marginLeft: 4, backgroundColor: '#065f46',
-                                            paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
-                                        }}>
-                                            <Text style={{ fontSize: 10, fontWeight: '700', color: '#6ee7b7' }}>✓ Verified</Text>
-                                        </View>
+                            <TouchableOpacity
+                                onPress={() => router.push(`/user/${listing.sellerId}` as any)}
+                                style={{ flexDirection: 'row', alignItems: 'center' }}
+                            >
+                                <View style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12, overflow: 'hidden', backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }}>
+                                    {sellerImageLoading && (
+                                        <ActivityIndicator size="small" color={colors.primary} style={{ position: 'absolute', zIndex: 1 }} />
                                     )}
+                                        <Image
+                                        source={{ uri: seller?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(seller?.name || 'S')}&background=random` }}
+                                        style={{ width: '100%', height: '100%' }}
+                                        onLoadStart={() => setSellerImageLoading(true)}
+                                        onLoadEnd={() => setSellerImageLoading(false)}
+                                    />
                                 </View>
-                            </View>
-                            <MaterialIcons name="chevron-right" size={22} color={colors.textSecondary} />
-                        </TouchableOpacity>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
+                                        {seller?.name || seller?.displayName || 'Campus Student'}
+                                    </Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 3, gap: 4 }}>
+                                        <MaterialIcons name="school" size={14} color={colors.textSecondary} />
+                                        <Text style={{ fontSize: 13, color: colors.textSecondary }}>
+                                            {seller?.rollNumber || 'BZU Student'} • {seller?.department || 'Department'}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <MaterialIcons name="chevron-right" size={22} color={colors.textSecondary} />
+                            </TouchableOpacity>
+
+                            {seller?.bzu_verified && (
+                                <View style={{ 
+                                    flexDirection: 'row', 
+                                    alignItems: 'center', 
+                                    backgroundColor: '#06A77D20', 
+                                    marginTop: 12, 
+                                    padding: 8, 
+                                    borderRadius: 10,
+                                    borderWidth: 1,
+                                    borderColor: '#06A77D40'
+                                }}>
+                                    <MaterialIcons name="verified" size={16} color="#06A77D" />
+                                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#06A77D', marginLeft: 6 }}>
+                                        Verified BZU Student
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
                     </View>
+
+                    {/* Academic Relevance */}
+                    {(listing.relevantDepartment || listing.relevantCourse || listing.relevantSemester) && (
+                        <View style={{ marginBottom: 20 }}>
+                             <Text style={{ fontSize: 16, fontWeight: '800', color: colors.textPrimary, marginBottom: 10 }}>
+                                Academic Relevance
+                            </Text>
+                            <View style={{ padding: 14, backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, gap: 8 }}>
+                                {listing.relevantDepartment && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                        <Text style={{ fontSize: 13, color: colors.textSecondary }}>Department</Text>
+                                        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textPrimary }}>{listing.relevantDepartment}</Text>
+                                    </View>
+                                )}
+                                {listing.relevantCourse && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                        <Text style={{ fontSize: 13, color: colors.textSecondary }}>Course Code</Text>
+                                        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textPrimary }}>{listing.relevantCourse}</Text>
+                                    </View>
+                                )}
+                                {listing.relevantSemester && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                        <Text style={{ fontSize: 13, color: colors.textSecondary }}>Semester</Text>
+                                        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textPrimary }}>{listing.relevantSemester}</Text>
+                                    </View>
+                                )}
+                            </View>
+                        </View>
+                    )}
 
                     {/* Location */}
                     <View style={{
@@ -427,13 +489,14 @@ export default function ListingDetailsScreen() {
                         </View>
                         <View style={{ flex: 1 }}>
                             <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary }}>
-                                Meetup Location
+                                Meetup Location on BZU Campus
                             </Text>
                             <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
                                 {listing.location || listing.meetupLocation || 'Campus Center Steps'}
                             </Text>
                         </View>
                     </View>
+
                 </View>
             </ScrollView>
 
@@ -448,26 +511,44 @@ export default function ListingDetailsScreen() {
             }}>
                 <TouchableOpacity
                     onPress={handleMessageSeller}
+                    disabled={authLoading || isChatLoading || !user || !listing || !(listing.sellerId || listing.userId)}
                     style={{
-                        flex: 1, backgroundColor: colors.background,
-                        borderWidth: 1, borderColor: colors.border,
-                        paddingVertical: 14, borderRadius: 14,
-                        alignItems: 'center', justifyContent: 'center',
-                        flexDirection: 'row', gap: 8,
+                        flex: 1,
+                        backgroundColor: chatButtonDisabled ? colors.surfaceHighlight : colors.surface,
+                        borderWidth: 1,
+                        borderColor: chatButtonDisabled ? colors.surfaceHighlight : colors.border,
+                        paddingVertical: 14,
+                        borderRadius: 18,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexDirection: 'row',
+                        gap: 8,
                     }}
                 >
-                    <MaterialIcons name="chat-bubble-outline" size={18} color={colors.textPrimary} />
-                    <Text style={{ color: colors.textPrimary, fontWeight: '700', fontSize: 15 }}>Message</Text>
+                    <MaterialIcons name="chat-bubble-outline" size={18} color={chatButtonDisabled ? colors.textMuted : colors.textPrimary} />
+                    {isChatLoading ? (
+                        <ActivityIndicator size="small" color={chatButtonDisabled ? colors.textMuted : colors.textPrimary} />
+                    ) : (
+                        <Text style={{ color: chatButtonDisabled ? colors.textMuted : colors.textPrimary, fontWeight: '700', fontSize: 15 }}>Message</Text>
+                    )}
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={handleMessageSeller}
+                    disabled={chatButtonDisabled}
                     style={{
-                        flex: 1.4, backgroundColor: colors.primary,
-                        paddingVertical: 14, borderRadius: 14,
-                        alignItems: 'center', justifyContent: 'center',
-                        flexDirection: 'row', gap: 8,
-                        shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.35, shadowRadius: 8, elevation: 6,
+                        flex: 1.4,
+                        backgroundColor: chatButtonDisabled ? '#94a3b88' : colors.primary,
+                        paddingVertical: 14,
+                        borderRadius: 18,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexDirection: 'row',
+                        gap: 8,
+                        shadowColor: colors.primary,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 6,
+                        elevation: 5,
                     }}
                 >
                     <MaterialIcons name="shopping-cart" size={18} color="white" />
